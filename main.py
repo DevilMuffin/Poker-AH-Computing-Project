@@ -47,6 +47,7 @@ class Player:
     def displayWins(self):
         print(f'You have placed {self.__betsPlaces} bets')
 
+gamePlayed = True # This is just a placeholder
 
 #Setting card values
 cardValues = {i: str(i) for i in range(2, 11)}
@@ -138,9 +139,37 @@ def dealCards():
         print(" ".join(lines))
 
 #Play Game
-def playGame():
+def playGame(gamePlayed):
     print("In this game there will be 6 players including yourself")
     print("We will now begin the game")
+
+    if gamePlayed:
+        print("Would you like to continue where you left off?")
+        print("1: Yes")
+        print("2: No")
+        choice = int
+        while choice not in [1, 2]:
+            try:
+                choice = int(input("Enter Choice: "))
+            except:
+                print("Please enter a correct option")
+        if choice == 1:
+            print("Continuing last game")
+        elif choice == 2:
+            print("This will reset all stats for you and the bots, are you sure?")
+            print("1: Yes")
+            print("2: No")
+            choice = int
+            while choice not in [1, 2]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
+            if choice == 1:
+                print("Deleting save data and starting new game")
+            elif choice == 2:
+                print("Continuing last game")
+
     
 
 #View Stats
@@ -164,7 +193,7 @@ def startProgram():
         except:
             print("Please enter a correct option")
     if choice == 1:
-        playGame()
+        playGame(gamePlayed)
     elif choice == 2:
         viewStats()
     elif choice == 3:

@@ -10,6 +10,7 @@ try:
 
     query = """CREATE IF NOT EXISTS player (
         id INTEGER AUTO_INCRAMENT PRIMARY KEY,
+        name VARCHAR NOT NULL,
         chipValue INTEGER NOT NULL,
         wins INTEGER NOT NULL,
         losses INTEGER NOT NULL,
@@ -29,11 +30,15 @@ finally:
 
 #Create class for player (Update later)
 class Player:
-    def __init__(self, chipValue, wins, losses, betsPlaced):
+    def __init__(self, name ,chipValue, wins, losses, betsPlaced):
+        self.__name = name
         self.__chipValue = chipValue
         self.__wins = wins
         self.__losses = losses
         self.__betsPlaces = betsPlaced
+
+    def displayName(self):
+        print(f'Your name is {self.__name}')
 
     def displayChips(self):
         print(f'You have {self.__chipValue} chips')
@@ -46,6 +51,35 @@ class Player:
 
     def displayWins(self):
         print(f'You have placed {self.__betsPlaces} bets')
+
+    def setName(self, nameValue):
+        self.__name = nameValue
+    
+    def increaseChips(self, amount):
+        self.__chipValue += amount
+
+    def increaseWins(self, amount):
+        self.__wins += amount
+
+    def increaseLosses(self, amount):
+        self.__losses += amount
+
+    def increaseBetsPlaced(self, amount):
+        self.__betsPlaces += amount
+
+    def setChips(self, amount):
+        self.__chipValue = amount
+
+    def setWins(self, amount):
+        self.__wins = amount
+
+    def setLosses(self, amount):
+        self.__losses = amount
+
+    def setBetsPlaced(self, amount):
+        self.__betsPlaces = amount
+        
+
 
 gamePlayed = True # This is just a placeholder
 
@@ -138,6 +172,20 @@ def dealCards():
     for lines in zip(*splitCards):
         print(" ".join(lines))
 
+
+def deleteData():
+    pass
+
+
+def loadData():
+    pass
+
+
+#Starting the poker round
+def startPoker():
+    pass
+
+
 #Play Game
 def playGame(gamePlayed):
     print("In this game there will be 6 players including yourself")
@@ -155,6 +203,7 @@ def playGame(gamePlayed):
                 print("Please enter a correct option")
         if choice == 1:
             print("Continuing last game")
+            startPoker()
         elif choice == 2:
             print("This will reset all stats for you and the bots, are you sure?")
             print("1: Yes")
@@ -169,6 +218,7 @@ def playGame(gamePlayed):
                 print("Deleting save data and starting new game")
             elif choice == 2:
                 print("Continuing last game")
+                startPoker()
 
     
 

@@ -8,7 +8,7 @@ try:
     sqliteConnection = sqlite3.connect('ProjectData.db')
     cursor = sqliteConnection.cursor()
 
-    query = """CREATE IF NOT EXISTS player (
+    query = """CREATE TABLE IF NOT EXISTS player (
         id INTEGER AUTO_INCRAMENT PRIMARY KEY,
         name VARCHAR NOT NULL,
         chipValue INTEGER NOT NULL,
@@ -79,6 +79,8 @@ class Player:
     def setBetsPlaced(self, amount):
         self.__betsPlaces = amount
         
+
+players = [Player("placeholder", 100, 0, 0, 0) for i in range(6)]
 
 
 gamePlayed = True # This is just a placeholder
@@ -177,8 +179,8 @@ def deleteData():
     pass
 
 
-def loadData():
-    pass
+def loadData(playerArray):
+    
 
 
 #Starting the poker round

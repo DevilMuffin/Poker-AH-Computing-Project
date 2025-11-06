@@ -9,12 +9,12 @@ try:
     cursor = sqliteConnection.cursor()
 
     query = """CREATE TABLE IF NOT EXISTS player (
-        id INTEGER AUTO_INCRAMENT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR NOT NULL,
         chipValue INTEGER NOT NULL,
         wins INTEGER NOT NULL,
         losses INTEGER NOT NULL,
-        betsPlaces INTEGER NOT NULL
+        betsPlaced INTEGER NOT NULL
     );"""
 
     cursor.execute(query)
@@ -38,22 +38,19 @@ class Player:
         self.__betsPlaces = betsPlaced
 
     def displayName(self):
-        print(f'Your name is {self.__name}')
+        return f'Your name is {self.__name}'
 
     def displayChips(self):
-        print(f'You have {self.__chipValue} chips')
+        return f'You have {self.__chipValue} chips'
 
     def displayWins(self):
-        print(f'You have {self.__wins} wins')
+        return f'You have {self.__wins} wins'
 
     def displayLosses(self):
-        print(f'You have {self.__losses} losses')
+        return f'You have {self.__losses} losses'
 
-    def displayWins(self):
-        print(f'You have placed {self.__betsPlaces} bets')
-
-    def setName(self, nameValue):
-        self.__name = nameValue
+    def displayBetsPlaced(self):
+        return f'You have placed {self.__betsPlaces} bets'
     
     def increaseChips(self, amount):
         self.__chipValue += amount
@@ -66,6 +63,9 @@ class Player:
 
     def increaseBetsPlaced(self, amount):
         self.__betsPlaces += amount
+
+    def setName(self, nameValue):
+        self.__name = nameValue
 
     def setChips(self, amount):
         self.__chipValue = amount
@@ -178,20 +178,44 @@ def dealCards():
 def deleteData():
     pass
 
+#Loads data from the database into the players array
+def loadData():
+    try:
+        sqliteConnection = sqlite3.connect('ProjectData.db')
+        sqliteConnection.row_factory = sqlite3.Row
+        cursor = sqliteConnection.cursor()
 
-def loadData(playerArray):
-    
+        cursor.execute("SELECT * FROM player")
+        rows = cursor.fetchall()
+
+        index = 0
+
+        for row in rows:
+            players[index].setName(row["name"])
+            players[index].setChips(row["chipValue"])
+            players[index].setWins(row["wins"])
+            players[index].setLosses(row["losses"])
+            players[index].setBetsPlaced(row["betsPlaced"])
+            index += 1
+
+
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+
 
 
 #Starting the poker round
 def startPoker():
-    pass
+    print("We will now begin the game")
 
 
 #Play Game
 def playGame(gamePlayed):
     print("In this game there will be 6 players including yourself")
-    print("We will now begin the game")
 
     if gamePlayed:
         print("Would you like to continue where you left off?")
@@ -205,6 +229,7 @@ def playGame(gamePlayed):
                 print("Please enter a correct option")
         if choice == 1:
             print("Continuing last game")
+            loadData()
             startPoker()
         elif choice == 2:
             print("This will reset all stats for you and the bots, are you sure?")
@@ -218,9 +243,13 @@ def playGame(gamePlayed):
                     print("Please enter a correct option")
             if choice == 1:
                 print("Deleting save data and starting new game")
+                deleteData()
             elif choice == 2:
                 print("Continuing last game")
+                loadData()
                 startPoker()
+        else:
+            startPoker()
 
     
 

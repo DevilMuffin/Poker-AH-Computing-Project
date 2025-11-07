@@ -2,10 +2,16 @@
 import random
 import sqlite3
 import sys
+import os
+
+dbFile = 'PokerData.db'
+gamePlayed = False
+if os.path.exists(dbFile):
+    gamePlayed = True
 
 #create database and tables if not created already
 try:
-    sqliteConnection = sqlite3.connect('ProjectData.db')
+    sqliteConnection = sqlite3.connect(dbFile)
     cursor = sqliteConnection.cursor()
 
     query = """CREATE TABLE IF NOT EXISTS player (
@@ -81,9 +87,6 @@ class Player:
         
 
 players = [Player("placeholder", 100, 0, 0, 0) for i in range(6)]
-
-
-gamePlayed = True # This is just a placeholder
 
 #Setting card values
 cardValues = {i: str(i) for i in range(2, 11)}
@@ -181,7 +184,7 @@ def deleteData():
 #Loads data from the database into the players array
 def loadData():
     try:
-        sqliteConnection = sqlite3.connect('ProjectData.db')
+        sqliteConnection = sqlite3.connect(dbFile)
         sqliteConnection.row_factory = sqlite3.Row
         cursor = sqliteConnection.cursor()
 
@@ -205,6 +208,17 @@ def loadData():
     finally:
         if sqliteConnection:
             sqliteConnection.close()
+
+#If game has not been played before
+def firstPlay():
+    name = input("Enter your name: ")
+    players[0].setName(name)
+    players[0].setName("Bob")
+    players[0].setName("Alice")
+    players[0].setName("James")
+    players[0].setName("Jacob")
+    players[0].setName("Scott")
+    startPoker()
 
 
 
@@ -249,7 +263,7 @@ def playGame(gamePlayed):
                 loadData()
                 startPoker()
         else:
-            startPoker()
+            firstPlay()
 
     
 

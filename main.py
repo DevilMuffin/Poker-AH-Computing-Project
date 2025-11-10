@@ -9,30 +9,68 @@ gamePlayed = False
 if os.path.exists(dbFile):
     gamePlayed = True
 
-#create database and tables if not created already
-try:
-    sqliteConnection = sqlite3.connect(dbFile)
-    cursor = sqliteConnection.cursor()
 
-    query = """CREATE TABLE IF NOT EXISTS player (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name VARCHAR NOT NULL,
-        chipValue INTEGER NOT NULL,
-        wins INTEGER NOT NULL,
-        losses INTEGER NOT NULL,
-        betsPlaced INTEGER NOT NULL
-    );"""
+#Adds default data to database
+def insertFirstData():
+    try:
+        sqliteConnection = sqlite3.connect(dbFile)
+        cursor = sqliteConnection.cursor()
 
-    cursor.execute(query)
+        insertQuery = '''INSERT INTO player (name, chipValue, wins, losses, betsPlaced) VALUES (?, ?, ?, ?, ?)'''
 
-    sqliteConnection.commit()
+        for i in range(len(players)):
+            cursor.execute(insertQuery, (players[i].getName(), players[i].getChips(), players[i].getWins(), players[i].getLosses(), players[i].getBetsPlaced()))
 
-except sqlite3.Error as error:
-    print("Error while connecting to sqlite", error)
+        sqliteConnection.commit()
 
-finally:
-    if sqliteConnection:
-        sqliteConnection.close()
+
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+
+
+#If game has not been played before
+def firstPlay():
+    try:
+        with open(dbFile, 'w') as f:
+            pass
+
+        sqliteConnection = sqlite3.connect(dbFile)
+        cursor = sqliteConnection.cursor()
+
+        query = """CREATE TABLE IF NOT EXISTS player (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name VARCHAR NOT NULL,
+            chipValue INTEGER NOT NULL,
+            wins INTEGER NOT NULL,
+            losses INTEGER NOT NULL,
+            betsPlaced INTEGER NOT NULL
+        );"""
+
+        cursor.execute(query)
+
+        sqliteConnection.commit()
+
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
+
+    name = input("Enter your name: ")
+    players[0].setName(name)
+    players[1].setName("Bob")
+    players[2].setName("Alice")
+    players[3].setName("James")
+    players[4].setName("Jacob")
+    players[5].setName("Scott")
+    insertFirstData()
+    startPoker()
+
 
 #Create class for player (Update later)
 class Player:
@@ -43,20 +81,20 @@ class Player:
         self.__losses = losses
         self.__betsPlaces = betsPlaced
 
-    def displayName(self):
-        return f'Your name is {self.__name}'
+    def getName(self):
+        return self.__name
 
-    def displayChips(self):
-        return f'You have {self.__chipValue} chips'
+    def getChips(self):
+        return self.__chipValue
 
-    def displayWins(self):
-        return f'You have {self.__wins} wins'
+    def getWins(self):
+        return self.__wins
 
-    def displayLosses(self):
-        return f'You have {self.__losses} losses'
+    def getLosses(self):
+        return self.__losses
 
-    def displayBetsPlaced(self):
-        return f'You have placed {self.__betsPlaces} bets'
+    def getBetsPlaced(self):
+        return self.__betsPlaces
     
     def increaseChips(self, amount):
         self.__chipValue += amount
@@ -155,6 +193,7 @@ def createCard(cardType, cardSuit):
     return card
 
 
+#Generates a random card without generating the same one twice
 def generateCard():
     while True:
 
@@ -167,7 +206,8 @@ def generateCard():
             return card, cardSuit, cardType
 
 
-def dealCards():
+#Deals out the flop
+def dealFlop():
     card1, cardSuit1, cardType1 = generateCard()
     card2, cardSuit2, cardType2 = generateCard()
     card3, cardSuit3, cardType3 = generateCard()
@@ -178,8 +218,10 @@ def dealCards():
         print(" ".join(lines))
 
 
+#Deletes dbFile which then allows gamePlayed to be false again
 def deleteData():
-    pass
+    os.remove(dbFile)
+
 
 #Loads data from the database into the players array
 def loadData():
@@ -209,26 +251,43 @@ def loadData():
         if sqliteConnection:
             sqliteConnection.close()
 
-#If game has not been played before
-def firstPlay():
-    name = input("Enter your name: ")
-    players[0].setName(name)
-    players[0].setName("Bob")
-    players[0].setName("Alice")
-    players[0].setName("James")
-    players[0].setName("Jacob")
-    players[0].setName("Scott")
-    startPoker()
 
+def updateData(chipValue, wins, losses, betsPlaced, name):
+    try:
+        sqliteConnection = sqlite3.connect(dbFile)
+        cursor = sqliteConnection.cursor()
+
+        insertQuery = '''UPDATE player SET chipValue= ?, SET wins = ?, SET losses = ?, SET betsPlaced = ?) WHERE name = ?'''
+
+        cursor.execute(insertQuery, (chipValue, wins, losses, betsPlaced, name))
+
+
+    except sqlite3.Error as error:
+        print("Error while connecting to sqlite", error)
+
+    finally:
+        if sqliteConnection:
+            sqliteConnection.close()
 
 
 #Starting the poker round
 def startPoker():
     print("We will now begin the game")
+    print(f'Your name is {players[0].getName()}') # Testing
+    dealer = random.choice(players)
+    dealerIndex = players.index(dealer)
+    print(f'The dealer is {dealer.getName()}')
+    print("Pre Flop:")
+    print(f"The player to the left of the dealer ({players[dealerIndex+1 % len(players)].getName()}) will place the small blind")
+    if players[dealerIndex+1 % len(players)] == players[0]:
+        sb = int(input("You are please place a small blind ($1-5): "))
+        while sb not in range(1, 6):
+            print("Please enter a value from 1 - 5")
+            sb = int(input("You are please place a small blind ($1-5): "))
 
 
 #Play Game
-def playGame(gamePlayed):
+def playGame():
     print("In this game there will be 6 players including yourself")
 
     if gamePlayed:
@@ -258,14 +317,14 @@ def playGame(gamePlayed):
             if choice == 1:
                 print("Deleting save data and starting new game")
                 deleteData()
+                firstPlay()
             elif choice == 2:
                 print("Continuing last game")
                 loadData()
                 startPoker()
-        else:
-            firstPlay()
+    else:
+        firstPlay()
 
-    
 
 #View Stats
 def viewStats():
@@ -288,7 +347,7 @@ def startProgram():
         except:
             print("Please enter a correct option")
     if choice == 1:
-        playGame(gamePlayed)
+        playGame()
     elif choice == 2:
         viewStats()
     elif choice == 3:

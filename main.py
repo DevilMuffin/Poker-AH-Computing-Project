@@ -252,12 +252,13 @@ def loadData():
             sqliteConnection.close()
 
 
+#Updates data of players in the database
 def updateData(chipValue, wins, losses, betsPlaced, name):
     try:
         sqliteConnection = sqlite3.connect(dbFile)
         cursor = sqliteConnection.cursor()
 
-        insertQuery = '''UPDATE player SET chipValue= ?, SET wins = ?, SET losses = ?, SET betsPlaced = ?) WHERE name = ?'''
+        insertQuery = '''UPDATE player SET chipValue= ?,wins = ?,losses = ?,betsPlaced = ? WHERE name = ?'''
 
         cursor.execute(insertQuery, (chipValue, wins, losses, betsPlaced, name))
 
@@ -326,9 +327,60 @@ def playGame():
         firstPlay()
 
 
-#View Stats
+#Insertion Sort Algorithm
+def leaderboardSort(stat):
+    array = []
+    for i in range(len(players)):
+        if stat == "chipValue":
+            value = players[i].getChips()
+        elif stat == "wins":
+            value = players[i].getWins()
+        elif stat == "losses":
+            value = players[i].getLosses()
+        elif stat == "betsPlaced":
+            value = players[i].getBetsPlaced()
+        array.append([players[i], value])
+        
+    n = len(array)
+        
+    #Insertion Sort
+    for i in range(1, n):
+        current = array[i]
+        previous = i - 1
+        while previous >= 0 and current[1] > array[previous][1]:
+            array[previous + 1] = array[previous]
+            previous -= 1
+        array[previous + 1] = current
+
+    print(f'From highest to lowest for {stat}')
+
+    for i in range(n):
+        player = array[i][0]
+        value = array[i][1]
+        print(str(1+i) + ":", player.getName(), "-", str(value))
+                
+
+#Display sorted leaderboard of player stats
 def viewStats():
-    pass
+    print("How would you like to sort stats by:")
+    print("1: Most Chips")
+    print("2: Most Wins")
+    print("3: Most Losses")
+    print("4: Most Bets Placed")
+    choice = 0
+    while choice not in [1, 2, 3, 4]:
+        try:
+            choice = int(input("Enter Choice: "))
+        except:
+            print("Please enter a correct option")
+    if choice == 1:
+        leaderboardSort("chipValue")
+    elif choice == 2:
+        leaderboardSort("wins")
+    elif choice == 3:
+        leaderboardSort("losses")
+    elif choice == 4:
+        leaderboardSort("betsPlaced")
 
 #Exit
 def endProgram():
@@ -340,7 +392,7 @@ def startProgram():
     print("1: Play")
     print("2: View Player Stats")
     print("3: Exit")
-    choice = int
+    choice = 0
     while choice not in [1, 2, 3]:
         try:
             choice = int(input("Enter Choice: "))
@@ -349,6 +401,8 @@ def startProgram():
     if choice == 1:
         playGame()
     elif choice == 2:
+        if gamePlayed:
+            loadData()
         viewStats()
     elif choice == 3:
         endProgram()

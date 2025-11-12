@@ -279,12 +279,38 @@ def startPoker():
     dealerIndex = players.index(dealer)
     print(f'The dealer is {dealer.getName()}')
     print("Pre Flop:")
-    print(f"The player to the left of the dealer ({players[dealerIndex+1 % len(players)].getName()}) will place the small blind")
-    if players[dealerIndex+1 % len(players)] == players[0]:
-        sb = int(input("You are please place a small blind ($1-5): "))
-        while sb not in range(1, 6):
-            print("Please enter a value from 1 - 5")
-            sb = int(input("You are please place a small blind ($1-5): "))
+    
+    #Small Blind
+    print(f"The player to the left of the dealer ({players[(dealerIndex+1) % len(players)].getName()}) will place the small blind")
+    if players[(dealerIndex+1) % len(players)] == players[0]:
+        while True:
+            try:
+                sb = int(input("Please place a small blind ($1-5): "))
+                if sb in range(1, 6):
+                    break
+                else:
+                    print("Please enter a value from 1 - 5")
+            except ValueError:
+                print("Please enter a value from 1 - 5")
+    else:
+        sb = random.randint(1, 5)
+    print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
+
+    #Big Blind
+    print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the small blind")
+    if players[(dealerIndex+2) % len(players)] == players[0]:
+        while True:
+            try:
+                bb = int(input("Please place a big blind (usually double the small blind) ($2-10): "))
+                if bb in range(2, 11) and bb > sb:
+                    break
+                else:
+                    print("Please enter a value from 2 - 10 and greater than the small blind")
+            except ValueError:
+                print("Please enter a value from 2 - 10 and greater than the small blind")
+    else:
+        bb = sb*2
+    print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
 
 
 #Play Game
@@ -386,6 +412,7 @@ def viewStats():
 def endProgram():
     sys.exit()
 
+#Starts the program off
 def startProgram():
     print("Welcome to terminal poker")
     print("Please select what you would like to do")

@@ -138,10 +138,10 @@ cardValues.update({
 
 
 #Creating suit dicts
-cardsHearts = {i: True for i in range(1, 14)}
-cardsDiamonds = {i: True for i in range(1, 14)}
-cardsSpades = {i: True for i in range(1, 14)}
-cardsClubs = {i: True for i in range(1, 14)}
+cardsHearts = {i: True for i in range(2, 15)}
+cardsDiamonds = {i: True for i in range(2, 15)}
+cardsSpades = {i: True for i in range(2, 15)}
+cardsClubs = {i: True for i in range(2, 15)}
 
 deck = {
     "Hearts": cardsHearts,
@@ -156,7 +156,7 @@ deck = {
 def createCard(cardType, cardSuit):
     cardSymbols = {i: str(i) for i in range(2, 11)}
     cardSymbols.update({
-        1: "A",
+        14: "A",
         11: "J",
         12: "Q",
         13: "K",
@@ -204,6 +204,23 @@ def generateCard():
             card = createCard(cardType, cardSuit)
             deck[cardSuit][cardType] = False
             return card, cardSuit, cardType
+
+
+def dealPreFlop(playerName):
+    card1, cardSuit1, cardType1 = generateCard()
+    card2, cardSuit2, cardType2 = generateCard()
+
+    if playerName == players[0].getName():
+        cards = [card1, card2]
+        splitCards = [card.split("\n") for card in cards]
+
+        for lines in zip(*splitCards):
+            print(" ".join(lines))
+
+    card1 = [cardSuit1, cardType1]
+    card2 = [cardSuit2, cardType2]
+
+    return card1, card2
 
 
 #Deals out the flop
@@ -271,6 +288,27 @@ def updateData(chipValue, wins, losses, betsPlaced, name):
             sqliteConnection.close()
 
 
+#Determines hand strength
+def determineHandStrength(hand):
+    score = 0
+    if hand[0][1] == hand[1][1]:
+        score = 50 + (hand[0][1]+hand[1][1])*5
+    else:
+        score = hand[0][1] + hand[1][1]
+    if hand[0][0] == hand[1][0]: #suited bonus
+        score += 10
+    if hand[0][1] == hand[1][1]+1 or hand[1][1]-1:
+        score += 5 #Difference of 1 (consecutive) bonus
+    if hand[0][1] == hand[1][1]+2 or hand[1][1]-2:
+        score += 5 #Difference of 2 (semi-consecutive) bonus
+
+
+
+#What the bot will do based off hand strength
+def preFlopBotAlg(score):
+    pass
+
+
 #Starting the poker round
 def startPoker():
     print("We will now begin the game")
@@ -278,7 +316,7 @@ def startPoker():
     dealer = random.choice(players)
     dealerIndex = players.index(dealer)
     print(f'The dealer is {dealer.getName()}')
-    print("Pre Flop:")
+    print("Setup:")
     
     #Small Blind
     print(f"The player to the left of the dealer ({players[(dealerIndex+1) % len(players)].getName()}) will place the small blind")
@@ -311,6 +349,17 @@ def startPoker():
     else:
         bb = sb*2
     print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
+
+
+    #Pre Flop
+    print("Pre Flop:")
+    print("Your hole cards are: ")
+    playerHands = [dealPreFlop(player.getName()) for player in players]
+    print(playerHands[0][0], playerHands[0][1])
+    
+    
+    
+
 
 
 #Play Game

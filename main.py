@@ -74,12 +74,13 @@ def firstPlay():
 
 #Create class for player (Update later)
 class Player:
-    def __init__(self, name ,chipValue, wins, losses, betsPlaced):
+    def __init__(self, name ,chipValue, wins, losses, betsPlaced, currentHandScore):
         self.__name = name
         self.__chipValue = chipValue
         self.__wins = wins
         self.__losses = losses
         self.__betsPlaces = betsPlaced
+        self.__currentHandScore = currentHandScore
 
     def getName(self):
         return self.__name
@@ -96,6 +97,9 @@ class Player:
     def getBetsPlaced(self):
         return self.__betsPlaces
     
+    def geCurrentHandScore(self):
+        return self.__currentHandScore
+    
     def increaseChips(self, amount):
         self.__chipValue += amount
 
@@ -107,6 +111,9 @@ class Player:
 
     def increaseBetsPlaced(self, amount):
         self.__betsPlaces += amount
+
+    def increaseCurrentHandScore(self, amount):
+        self.__currentHandScore += amount
 
     def setName(self, nameValue):
         self.__name = nameValue
@@ -122,9 +129,12 @@ class Player:
 
     def setBetsPlaced(self, amount):
         self.__betsPlaces = amount
+
+    def setCurrentHandScore(self, amount):
+        self.__currentHandScore = amount
         
 
-players = [Player("placeholder", 100, 0, 0, 0) for i in range(6)]
+players = [Player("placeholder", 100, 0, 0, 0, 0) for i in range(6)]
 
 #Setting card values
 cardValues = {i: str(i) for i in range(2, 11)}
@@ -291,22 +301,54 @@ def updateData(chipValue, wins, losses, betsPlaced, name):
 #Determines hand strength
 def determineHandStrength(hand):
     score = 0
-    if hand[0][1] == hand[1][1]:
-        score = 50 + (hand[0][1]+hand[1][1])*5
+    rank1 = hand[0][1]
+    rank2 = hand[1][1]
+    suit1 = hand[0][0]
+    suit2 = hand[1][0]
+
+    if rank1 == rank2:
+        score = 50 + (rank1 + rank2) * 5
     else:
-        score = hand[0][1] + hand[1][1]
-    if hand[0][0] == hand[1][0]: #suited bonus
+        score = rank1 + rank2
+
+    if suit1 == suit2: #suited bonus
         score += 10
-    if hand[0][1] == hand[1][1]+1 or hand[1][1]-1:
+
+    if abs(rank1 - rank2) == 1:
         score += 5 #Difference of 1 (consecutive) bonus
-    if hand[0][1] == hand[1][1]+2 or hand[1][1]-2:
+
+    if abs(rank1 - rank2) == 2:
         score += 5 #Difference of 2 (semi-consecutive) bonus
+
+    score +- random.randint(-5, 5) #Adds a level of randomness
+
+    return score
 
 
 
 #What the bot will do based off hand strength
 def preFlopBotAlg(score):
-    pass
+    r = random.random()
+
+    if score > 80:
+        if r < 0.8:
+            action = "raise"
+        else:
+            action = random.choice(["call", "fold"])
+
+    elif score > 50:
+        if r < 0.8:
+            action = "call"
+        else:
+            action = random.choice(["raise", "fold"])
+
+    else:
+        if r < 0.8:
+            action = "fold"
+        else:
+            action = random.choice(["raise", "call"])
+
+    return action
 
 
 #Starting the poker round

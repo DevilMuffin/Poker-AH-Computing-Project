@@ -97,7 +97,7 @@ class Player:
     def getBetsPlaced(self):
         return self.__betsPlaces
     
-    def geCurrentHandScore(self):
+    def getCurrentHandScore(self):
         return self.__currentHandScore
     
     def increaseChips(self, amount):
@@ -306,21 +306,39 @@ def determineHandStrength(hand):
     suit1 = hand[0][0]
     suit2 = hand[1][0]
 
+    high = max(rank1, rank2)
+    low = min(rank1, rank2)
+    diff = abs(rank1 - rank2)
+
     if rank1 == rank2:
-        score = 50 + (rank1 + rank2) * 5
+        score = 100 + rank1 * 3
     else:
         score = rank1 + rank2
+
+        #For High Ranking cards in hands without a pair
+        if high == 14: # Ace
+            score += 14
+        elif high == 13: # King
+            score += 12
+        elif high == 12: # Queen
+            score += 8
+        elif high == 11: # Jack
+            score += 5
+
+        #If both cards are high ranking but not a pair
+        if rank1 >= 11 and rank2 >= 11:
+            score += 8
 
     if suit1 == suit2: #suited bonus
         score += 10
 
-    if abs(rank1 - rank2) == 1:
+    if diff == 1:
         score += 5 #Difference of 1 (consecutive) bonus
 
-    if abs(rank1 - rank2) == 2:
+    if diff == 2:
         score += 5 #Difference of 2 (semi-consecutive) bonus
 
-    score +- random.randint(-5, 5) #Adds a level of randomness
+    score += random.randint(-5, 5) #Adds a level of randomness
 
     return score
 
@@ -331,22 +349,27 @@ def preFlopBotAlg(score):
     r = random.random()
 
     if score > 80:
-        if r < 0.8:
+        if r < 0.9:
             action = "raise"
         else:
-            action = random.choice(["call", "fold"])
+            action = "fold"
 
     elif score > 50:
+        if r < 0.7:
+            action = "raise"
+        else:
+            action = "call"
+
+    elif score > 30:
         if r < 0.8:
             action = "call"
         else:
             action = random.choice(["raise", "fold"])
-
+    
     else:
-        if r < 0.8:
+        if r < 0.7:
             action = "fold"
-        else:
-            action = random.choice(["raise", "call"])
+        else: action = random.choice(["raise", "call"])
 
     return action
 
@@ -398,6 +421,9 @@ def startPoker():
     print("Your hole cards are: ")
     playerHands = [dealPreFlop(player.getName()) for player in players]
     print(playerHands[0][0], playerHands[0][1])
+    for i in range(6):
+        players[i].setCurrentHandScore(determineHandStrength(playerHands[i]))
+    print(players[0].getCurrentHandScore())
     
     
     

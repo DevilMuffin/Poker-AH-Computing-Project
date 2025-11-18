@@ -3,6 +3,12 @@ import random
 import sqlite3
 import sys
 import os
+import time
+
+
+#So I don't need to type time.sleep every time
+def wait(amount):
+    time.sleep(amount)
 
 dbFile = 'PokerData.db'
 gamePlayed = False
@@ -400,7 +406,7 @@ def startPoker():
     print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
 
     #Big Blind
-    print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the small blind")
+    print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the big blind")
     if players[(dealerIndex+2) % len(players)] == players[0]:
         while True:
             try:
@@ -419,11 +425,19 @@ def startPoker():
     #Pre Flop
     print("Pre Flop:")
     print("Your hole cards are: ")
+
     playerHands = [dealPreFlop(player.getName()) for player in players]
+
     print(playerHands[0][0], playerHands[0][1])
+
     for i in range(6):
         players[i].setCurrentHandScore(determineHandStrength(playerHands[i]))
-    print(players[0].getCurrentHandScore())
+    
+    wait(1)
+    print('The players starting to the left of the Big Blind will now chose what to do')
+    
+    for i in range(6):
+        print(players[(dealerIndex+3+i) % len(players)].getName())
     
     
     

@@ -68,6 +68,9 @@ def firstPlay():
             sqliteConnection.close()
 
     name = input("Enter your name: ")
+    while name.lower() in ["bob", "alice", "james", "jacob", "scott"]:
+        print("Please choose a unique name")
+        name = input("Enter your name: ")
     players[0].setName(name)
     players[1].setName("Bob")
     players[2].setName("Alice")
@@ -383,10 +386,18 @@ def preFlopBotAlg(score):
 #Starting the poker round
 def startPoker():
     print("We will now begin the game")
+
+    wait(0.5)
+
     print(f'Your name is {players[0].getName()}') # Testing
+
     dealer = random.choice(players)
     dealerIndex = players.index(dealer)
+
     print(f'The dealer is {dealer.getName()}')
+    
+    wait(0.5)
+
     print("Setup:")
     
     #Small Blind
@@ -405,6 +416,7 @@ def startPoker():
         sb = random.randint(1, 5)
     print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
 
+    wait(0.5)
     #Big Blind
     print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the big blind")
     if players[(dealerIndex+2) % len(players)] == players[0]:
@@ -421,7 +433,8 @@ def startPoker():
         bb = sb*2
     print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
 
-
+    
+    wait(0.5)
     #Pre Flop
     print("Pre Flop:")
     print("Your hole cards are: ")
@@ -433,11 +446,29 @@ def startPoker():
     for i in range(6):
         players[i].setCurrentHandScore(determineHandStrength(playerHands[i]))
     
-    wait(1)
+    wait(0.5)
     print('The players starting to the left of the Big Blind will now chose what to do')
     
     for i in range(6):
-        print(players[(dealerIndex+3+i) % len(players)].getName())
+        if players[(dealerIndex+3+i) % len(players)] == players[0]:
+            print("It is your turn to choose, what would you like to do:")
+            print("1: Raise")
+            print("2: Call")
+            print("3: Fold")
+            choice = 0
+            while choice not in [1, 2, 3]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
+
+            if choice == 1:
+                print("What would you like to raise the current bet to (must be more than the big blind)")
+                amount = int(input("Enter raise: "))
+
+        else:
+            action = preFlopBotAlg(players[(dealerIndex+3+i) % len(players)].getCurrentHandScore())
+
     
     
     
@@ -452,7 +483,7 @@ def playGame():
         print("Would you like to continue where you left off?")
         print("1: Yes")
         print("2: No")
-        choice = int
+        choice = 0
         while choice not in [1, 2]:
             try:
                 choice = int(input("Enter Choice: "))

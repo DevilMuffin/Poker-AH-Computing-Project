@@ -387,7 +387,7 @@ def preFlopBotAlg(score):
 def startPoker():
     print("We will now begin the game")
 
-    wait(0.5)
+    wait(1)
 
     print(f'Your name is {players[0].getName()}') # Testing
 
@@ -416,7 +416,7 @@ def startPoker():
         sb = random.randint(1, 5)
     print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
 
-    wait(0.5)
+    wait(1)
     #Big Blind
     print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the big blind")
     if players[(dealerIndex+2) % len(players)] == players[0]:
@@ -434,7 +434,7 @@ def startPoker():
     print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
 
     
-    wait(0.5)
+    wait(1)
     #Pre Flop
     print("Pre Flop:")
     print("Your hole cards are: ")
@@ -446,10 +446,16 @@ def startPoker():
     for i in range(6):
         players[i].setCurrentHandScore(determineHandStrength(playerHands[i]))
     
-    wait(0.5)
+    wait(1)
     print('The players starting to the left of the Big Blind will now chose what to do')
     
+    previousRaise = bb
+    currentBet = bb
+
     for i in range(6):
+
+        minRaise = previousRaise+currentBet
+
         if players[(dealerIndex+3+i) % len(players)] == players[0]:
             print("It is your turn to choose, what would you like to do:")
             print("1: Raise")
@@ -463,11 +469,33 @@ def startPoker():
                     print("Please enter a correct option")
 
             if choice == 1:
-                print("What would you like to raise the current bet to (must be more than the big blind)")
-                amount = int(input("Enter raise: "))
+                print(f"What would you like to raise the current bet to (must be at least the current bet + the previous raise: {minRaise})")
+                
+                while True:
+                    try:
+                        amount = int(input("Enter raise: "))
+                        if amount >= minRaise:
+                            previousRaise = amount - currentBet
+                            currentBet = amount
+                            break
+                        else:
+                            print(f"Please enter an amount thats greater than or equal to {minRaise}")
+                    except ValueError:
+                        print(f"Please enter an amount thats greater than or equal to {minRaise}")
+
+            elif choice == 2:
+                pass
 
         else:
             action = preFlopBotAlg(players[(dealerIndex+3+i) % len(players)].getCurrentHandScore())
+
+            if action == "raise":
+                amount = random.randint(minRaise, minRaise+10)
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                previousRaise = amount-currentBet
+                currentBet = amount
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
+                wait(1)
 
     
     

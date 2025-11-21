@@ -83,13 +83,14 @@ def firstPlay():
 
 #Create class for player (Update later)
 class Player:
-    def __init__(self, name ,chipValue, wins, losses, betsPlaced, currentHandScore):
+    def __init__(self, name ,chipValue, wins, losses, betsPlaced, currentHandScore, hasFolded):
         self.__name = name
         self.__chipValue = chipValue
         self.__wins = wins
         self.__losses = losses
         self.__betsPlaces = betsPlaced
         self.__currentHandScore = currentHandScore
+        self.__hasFolded = hasFolded
 
     def getName(self):
         return self.__name
@@ -108,6 +109,9 @@ class Player:
     
     def getCurrentHandScore(self):
         return self.__currentHandScore
+    
+    def getHasFolded(self):
+        return self.__hasFolded
     
     def increaseChips(self, amount):
         self.__chipValue += amount
@@ -141,9 +145,12 @@ class Player:
 
     def setCurrentHandScore(self, amount):
         self.__currentHandScore = amount
+
+    def setHasFolded(self, value):
+        self.__hasFolded = value
         
 
-players = [Player("placeholder", 100, 0, 0, 0, 0) for i in range(6)]
+players = [Player("placeholder", 100, 0, 0, 0, 0, False) for i in range(6)]
 
 #Setting card values
 cardValues = {i: str(i) for i in range(2, 11)}
@@ -289,7 +296,13 @@ def loadData():
 
 
 #Updates data of players in the database
-def updateData(chipValue, wins, losses, betsPlaced, name):
+def updateData(player):
+    chipValue = player.getChips()
+    wins = player.getWins()
+    losses = player.getLosses()
+    betsPlaced = player.getBetsPlaced()
+    name = player.getName()
+
     try:
         sqliteConnection = sqlite3.connect(dbFile)
         cursor = sqliteConnection.cursor()
@@ -396,7 +409,7 @@ def startPoker():
 
     print(f'The dealer is {dealer.getName()}')
     
-    wait(0.5)
+    wait(1)
 
     print("Setup:")
     
@@ -457,6 +470,7 @@ def startPoker():
         minRaise = previousRaise+currentBet
 
         if players[(dealerIndex+3+i) % len(players)] == players[0]:
+            print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
             print("It is your turn to choose, what would you like to do:")
             print("1: Raise")
             print("2: Call")
@@ -477,6 +491,8 @@ def startPoker():
                         if amount >= minRaise:
                             previousRaise = amount - currentBet
                             currentBet = amount
+                            print(f"You raised to ${amount}")
+                            players[0].increaseChips(-amount)
                             break
                         else:
                             print(f"Please enter an amount thats greater than or equal to {minRaise}")
@@ -484,7 +500,15 @@ def startPoker():
                         print(f"Please enter an amount thats greater than or equal to {minRaise}")
 
             elif choice == 2:
-                pass
+                print(f'You called on ${currentBet}')
+                players[0].increaseChips(-currentBet)
+
+            elif choice == 3:
+                print("You have folded")
+                players[0].setHasFolded(True)
+
+            wait(1)
+
 
         else:
             action = preFlopBotAlg(players[(dealerIndex+3+i) % len(players)].getCurrentHandScore())
@@ -497,10 +521,14 @@ def startPoker():
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
                 wait(1)
 
-    
-    
-    
+            elif action == "call":
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
+                wait(1)
 
+            elif action == "fold":
+                players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
+                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
 
 
 #Play Game

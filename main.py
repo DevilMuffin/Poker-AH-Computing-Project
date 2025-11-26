@@ -4,6 +4,7 @@ import sqlite3
 import sys
 import os
 import time
+from itertools import combinations
 from collections import Counter
 
 
@@ -405,16 +406,75 @@ def preFlopBotAlg(score):
     return action
 
 
-def determineFlopHandStrength(hand, flop):
-    cards = (*hand, *flop)
-    suits, ranks = zip(*cards)
+#Check how strong your 5 card hand is
+def determine5HandStrength(cards):
+    ranks = [r for s,r in cards]
+    suits = [s for s,r in cards]
+    score = 0
 
-    cards = list(zip(ranks, suits))
+    #Adding score for pairs, trips, fullhouse and 4 of a kind
+    rankCounts = Counter(ranks)
+    if 4 in rankCounts.values():
+        score += 700
+    elif 3 in rankCounts.values() and 2 in rankCounts.values():
+        score += 600
+    elif 3 in rankCounts.values():
+        score += 300
+    elif list(rankCounts.values()).count(2) == 2:
+        score += 200
+    elif 2 in rankCounts.values():
+        score += 100
 
-    print(cards)
+
+    #Checking for flush
+    suitCounts = Counter(suits)
+    if 5 in suitCounts.values():
+        score += 500
 
     
+    #Straight
+    unique = sorted(set(ranks))
+    if 14 in unique:
+        unique.append(1) #Ace can also be low
 
+    straightMade = False
+    straightHigh = 0
+    for i in range(len(unique)-4):
+        window = unique[i:i+5]
+        if all(window[j]-window[j-1]==1 for j in range(1,5)):
+            straightMade = True
+            straightHigh = window[-1]
+
+    if straightMade and straightHigh == 14:
+        score = 1000
+        return score
+    else:
+        score += 400 + straightHigh
+
+
+    #High card
+    score += max(ranks)/2
+
+    #Randomness
+    score += random.randint(-50, 50)
+
+    return score
+
+
+#Evaluates score for flop, turn and river
+def evaluate(hand, tableCards):
+    cards = list(hand) + list(tableCards)
+
+    if len(cards) <=5:
+        return determine5HandStrength(cards)
+    else:
+        bestScore = 0
+        for combo in combinations(cards, 5):
+            score = determine5HandStrength(combo)
+            if score > bestScore:
+                bestScore = score
+
+        return bestScore
 
 
 #Starting the poker round
@@ -675,7 +735,7 @@ def startPoker():
 
         
         else:
-            action = determineFlopHandStrength(playerHands[(dealerIndex+3+i) % len(players)], flopCards)
+            action = determine5HandStrength(playerHands[(dealerIndex+3+i) % len(players)], flopCards)
 
             
 

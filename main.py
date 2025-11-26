@@ -4,6 +4,7 @@ import sqlite3
 import sys
 import os
 import time
+from collections import Counter
 
 
 #So I don't need to type time.sleep every time
@@ -260,6 +261,12 @@ def dealFlop():
     for lines in zip(*splitCards):
         print(" ".join(lines))
 
+    card1 = [cardSuit1, cardType1]
+    card2 = [cardSuit2, cardType2]
+    card3 = [cardSuit3, cardType3]
+
+    cards = [card1, card2, card3]
+
     return cards
 
 
@@ -398,6 +405,18 @@ def preFlopBotAlg(score):
     return action
 
 
+def determineFlopHandStrength(hand, flop):
+    cards = (*hand, *flop)
+    suits, ranks = zip(*cards)
+
+    cards = list(zip(ranks, suits))
+
+    print(cards)
+
+    
+
+
+
 #Starting the poker round
 def startPoker():
     print("We will now begin the game")
@@ -494,6 +513,7 @@ def startPoker():
                             currentBet = amount
                             print(f"You raised to ${amount}")
                             players[0].increaseChips(-amount)
+                            players[0].increaseBetsPlaced(1)
                             break
                         else:
                             print(f"Please enter an amount thats greater than or equal to {minRaise}")
@@ -503,12 +523,12 @@ def startPoker():
             elif choice == 2:
                 print(f'You called on ${currentBet}')
                 players[0].increaseChips(-currentBet)
+                players[0].increaseBetsPlaced(1)
 
             elif choice == 3:
                 print("You have folded")
                 players[0].setHasFolded(True)
 
-            wait(1.5)
 
 
         else:
@@ -520,18 +540,20 @@ def startPoker():
                 previousRaise = amount-currentBet
                 currentBet = amount
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
 
 
             elif action == "call":
                 players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
 
 
             elif action == "fold":
                 players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
                 print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
 
-            wait(1.5)
+        wait(1.5)
 
 
     print("Flop:")
@@ -571,6 +593,7 @@ def startPoker():
                             print(f"You bet ${amount}")
                             players[0].increaseChips(-amount)
                             betPlaced = True
+                            players[0].increaseBetsPlaced(1)
                             break
                         else:
                             print(f"Please enter an amount thats greater than 0")
@@ -590,19 +613,71 @@ def startPoker():
 
 
         elif players[(dealerIndex+3+i) % len(players)] == players[0] and not players[0].getHasFolded():
+            choice = 0
             print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
             print("It is your turn to choose, what would you like to do:")
             print("1: Raise")
             print("2: Call")
-            print("3: Check")
-            print("4: Fold")
-            choice = 0
-            while choice not in [1, 2, 3, 4]:
-                try:
-                    choice = int(input("Enter Choice: "))
-                except:
-                    print("Please enter a correct option")
 
+            if betPlaced:
+                print("3: Fold")
+
+                while choice not in [1, 2, 3]:
+                    try:
+                        choice = int(input("Enter Choice: "))
+                    except:
+                        print("Please enter a correct option")
+
+                if choice == 3:
+                    print("You have folded")
+                    previousAction = "fold"
+            else:
+                print("3: Check")
+                print("4: Fold")
+
+                while choice not in [1, 2, 3, 4]:
+                    try:
+                        choice = int(input("Enter Choice: "))
+                    except:
+                        print("Please enter a correct option")
+
+                if choice == 3:
+                    print("You have checked")
+                    previousAction = "check"
+
+                elif choice == 4:
+                    print("You have folded")
+                    previousAction = "fold"
+            
+
+            if choice == 1:
+                print(f"What would you like to raise the current bet to (must be at least the current bet + the previous raise: {minRaise})")
+
+                while True:
+                    try:
+                        amount = int(input("Enter raise: "))
+                        if amount >= minRaise:
+                            previousRaise = amount - currentBet
+                            currentBet = amount
+                            print(f"You raised to ${amount}")
+                            players[0].increaseChips(-amount)
+                            players[0].increaseBetsPlaced(1)
+                            break
+                        else:
+                            print(f"Please enter an amount thats greater than or equal to {minRaise}")
+                    except ValueError:
+                        print(f"Please enter an amount thats greater than or equal to {minRaise}")
+
+            elif choice == 2:
+                print(f'You called on ${currentBet}')
+                players[0].increaseChips(-currentBet)
+                players[0].increaseBetsPlaced(1)
+
+        
+        else:
+            action = determineFlopHandStrength(playerHands[(dealerIndex+3+i) % len(players)], flopCards)
+
+            
 
 
 

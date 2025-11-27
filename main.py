@@ -375,7 +375,6 @@ def determineHandStrength(hand):
     return score
 
 
-
 #What the bot will do based off hand strength
 def preFlopBotAlg(score):
     r = random.random()
@@ -410,55 +409,101 @@ def preFlopBotAlg(score):
 def determine5HandStrength(cards):
     ranks = [r for s,r in cards]
     suits = [s for s,r in cards]
-    score = 0
-
-    #Adding score for pairs, trips, fullhouse and 4 of a kind
-    rankCounts = Counter(ranks)
-    if 4 in rankCounts.values():
-        score += 700
-    elif 3 in rankCounts.values() and 2 in rankCounts.values():
-        score += 600
-    elif 3 in rankCounts.values():
-        score += 300
-    elif list(rankCounts.values()).count(2) == 2:
-        score += 200
-    elif 2 in rankCounts.values():
-        score += 100
-
-
-    #Checking for flush
-    suitCounts = Counter(suits)
-    if 5 in suitCounts.values():
-        score += 500
 
     
-    #Straight
+    #Sorts ranks high to low
+    ranksSorted = sorted(ranks, reverse=True)
+
+
+    #Handle ace high and low
     unique = sorted(set(ranks))
     if 14 in unique:
-        unique.append(1) #Ace can also be low
+        unique.append(1)
 
-    straightMade = False
+
+    #Detect straight
     straightHigh = 0
     for i in range(len(unique)-4):
         window = unique[i:i+5]
-        if all(window[j]-window[j-1]==1 for j in range(1,5)):
-            straightMade = True
+        if all(window[j]-window[j-1] == 1 for j in range(1, 5)):
             straightHigh = window[-1]
 
-    if straightMade and straightHigh == 14:
-        score = 1000
-        return score
-    else:
-        score += 400 + straightHigh
+    
+    #Detect Flush
+    flush = None
+    suitCounts = Counter(suits)
+    for s, c in suitCounts.items():
+        if c >= 5:
+            flush = s
+            break
 
 
-    #High card
-    score += max(ranks)/2
+    #Detect duplicates
+    rankCounts = Counter(ranks)
+    counts = sorted(rankCounts.values(), reverse=True)
 
-    #Randomness
-    score += random.randint(-50, 50)
 
-    return score
+    #Check straight flush
+    if flush:
+        flushCards = sorted([r for (s, r) in cards if s == flush])
+        if 14 in flushCards:
+            flushCards.append(1)
+
+        for i in range(len(flushCards)-4):
+            window = flushCards[i:i+5]
+            if all(window[j]-window[j-1] == 1 for j in range(1, 5)):
+                high = window[-1]
+                if high == 14:  #Royal Flush
+                    return 1000000 + random.randint(-2000, 2000)
+                else:
+                    return 900000 + high * 10 + random.randint(-2000, 2000)
+
+    #Four of a kind
+    if counts[0] == 4:
+        quadRank = max(rank for rank, c in rankCounts.items() if c == 4)
+        kicker = max(rank for rank, c in rankCounts.items() if c != 4)
+        return 800000 + quadRank * 20 + kicker + random.randint(-2000, 2000)
+
+    #Full House
+    if counts[0] == 3 and counts[1] >= 2:
+        tripsRank = max(rank for rank, c in rankCounts.items() if c == 3)
+        pairRank = max(rank for rank, c in rankCounts.items() if c >= 2 and rank != trips_rank)
+        return 700000 + tripsRank * 20 + pairRank + random.randint(-2000, 2000)
+
+    #Flush
+    if flush:
+        sortedFlush = sorted([r for s, r in cards if s == flush], reverse=True)
+        return 600000 + sum(sortedFlush[i] * (15 ** (4 - i)) for i in range(5)) + random.randint(-2000, 2000)
+
+    #Straight
+    if straightHigh:
+        return 500000 + straightHigh * 10 + random.randint(-2000, 2000)
+
+    #Three of a Kind
+    if counts[0] == 3:
+        tripsRank = max(rank for rank, c in rankCounts.items() if c == 3)
+        kickers = sorted((r for r in ranks if r != tripsRank), reverse=True)
+        return 400000 + tripsRank * 20 + kickers[0] * 2 + kickers[1] + random.randint(-2000, 2000)
+
+    #Two Pair
+    if counts[0] == 2 and counts[1] == 2:
+        pairs = sorted([rank for rank, c in rankCounts.items() if c == 2], reverse=True)
+        kicker = max(rank for rank, c in rankCounts.items() if c == 1)
+        return 300000 + pairs[0] * 30 + pairs[1] * 5 + kicker + random.randint(-2000, 2000)
+
+    #One Pair
+    if counts[0] == 2:
+        pairRank = max(rank for rank, c in rankCounts.items() if c == 2)
+        kickers = sorted((r for r in ranks if r != pairRank), reverse=True)
+        return 200000 + pairRank * 40 + kickers[0] * 4 + kickers[1] * 3 + kickers[2] + random.randint(-2000, 2000)
+
+    #High Card
+    return 100000 + ranksSorted[0]*20 + ranksSorted[1]*5 + random.randint(-2000, 2000)
+
+
+def postBlindActions(score, hasBet):
+    score = score/1000000
+
 
 
 #Evaluates score for flop, turn and river
@@ -735,7 +780,40 @@ def startPoker():
 
         
         else:
-            action = determine5HandStrength(playerHands[(dealerIndex+3+i) % len(players)], flopCards)
+            if players[(dealerIndex+3+i) % len(players)].getHasFolded == False:
+                action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], flopCards), betPlaced)
+            else:
+                action = "out"
+
+            if action == "bet":
+                amount = random.randint(1, 10)
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, bet {amount}')
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                previousRaise = amount
+                currentBet = amount
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+
+
+            elif action == "raise":
+                amount = random.randint(minRaise, minRaise+10)
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                previousRaise = amount-currentBet
+                currentBet = amount
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+
+
+            elif action == "call":
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+
+
+            elif action == "fold":
+                players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
+                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
+
+            ###### add check
 
             
 

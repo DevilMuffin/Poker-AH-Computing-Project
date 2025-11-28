@@ -503,7 +503,58 @@ def determine5HandStrength(cards):
 
 def postBlindActions(score, hasBet):
     score = score/1000000
+    r = random.random()
+    action = "check"
 
+    if score > 0.8:
+        if not hasBet:
+            if r < 0.85:
+                action = "bet"
+            else:
+                action = "check"
+        else:
+            if r < 0.9:
+                action = "raise"
+            else:
+                action = "call"
+    
+    elif score > 0.5:
+        if not hasBet:
+            if r < 0.6:
+                action = "bet"
+            else:
+                action = "check"
+        else:
+            if r < 0.7:
+                action = "call"
+            else:
+                action = "raise"
+
+    elif score > 0.2:
+        if not hasBet:
+            if r < 0.4:
+                action = "bet"
+            else:
+                action = random.choice(["check", "fold"])
+        else:
+            if r < 0.5:
+                action = "call"
+            else:
+                action = random.choice(["raise", "fold"])
+
+    else:
+        if not hasBet:
+            if r < 0.2:
+                action = "bet"
+            else:
+                action = random.choice(["check", "fold"])
+        else:
+            if r < 0.3:
+                action = "raise"
+            else:
+                action = action = random.choice(["call", "fold"])
+            
+    return action   
 
 
 #Evaluates score for flop, turn and river
@@ -617,7 +668,14 @@ def startPoker():
                             previousRaise = amount - currentBet
                             currentBet = amount
                             print(f"You raised to ${amount}")
-                            players[0].increaseChips(-amount)
+
+                            if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                                players[0].increaseChips(-(amount-sb))
+                            elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+2) % len(players)]:
+                                players[0].increaseChips(-(amount-bb))
+                            else:
+                                players[0].increaseChips(-amount)
+
                             players[0].increaseBetsPlaced(1)
                             break
                         else:
@@ -641,7 +699,14 @@ def startPoker():
 
             if action == "raise":
                 amount = random.randint(minRaise, minRaise+10)
-                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+
+                if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-(amount-sb))
+                elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+2) % len(players)]:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-(amount-bb))
+                else:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+
                 previousRaise = amount-currentBet
                 currentBet = amount
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
@@ -649,7 +714,12 @@ def startPoker():
 
 
             elif action == "call":
-                players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-sb))
+                elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-bb))
+                else:
+                    players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
 
@@ -780,7 +850,7 @@ def startPoker():
 
         
         else:
-            if players[(dealerIndex+3+i) % len(players)].getHasFolded == False:
+            if players[(dealerIndex+3+i) % len(players)].getHasFolded() == False:
                 action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], flopCards), betPlaced)
             else:
                 action = "out"
@@ -792,6 +862,7 @@ def startPoker():
                 previousRaise = amount
                 currentBet = amount
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+                betPlaced = True
 
 
             elif action == "raise":

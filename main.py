@@ -301,6 +301,11 @@ def loadData():
         print("Error while connecting to sqlite", error)
 
     finally:
+            
+
+
+
+#Play Game
         if sqliteConnection:
             sqliteConnection.close()
 
@@ -738,11 +743,18 @@ def startPoker():
     print("The flop cards are:")
     flopCards = dealFlop()
 
+    wait(1.5)
+
     betPlaced = False
+    bettingActive = True
+    resetIndex = False
+    lastBetter = None
     previousRaise = 0
     currentBet = 0
-    previousAction = ""
-    for i in range(6):
+
+    i = 0
+
+    while bettingActive:
         minRaise = previousRaise+currentBet
 
         if players[(dealerIndex+3+i) % len(players)] == players[0] and not betPlaced and not players[0].getHasFolded():
@@ -768,6 +780,7 @@ def startPoker():
                             print(f"You bet ${amount}")
                             players[0].increaseChips(-amount)
                             betPlaced = True
+                            resetIndex = True
                             players[0].increaseBetsPlaced(1)
                             break
                         else:
@@ -793,37 +806,13 @@ def startPoker():
             print("It is your turn to choose, what would you like to do:")
             print("1: Raise")
             print("2: Call")
+            print("3: Fold")
 
-            if betPlaced:
-                print("3: Fold")
-
-                while choice not in [1, 2, 3]:
-                    try:
-                        choice = int(input("Enter Choice: "))
-                    except:
-                        print("Please enter a correct option")
-
-                if choice == 3:
-                    print("You have folded")
-                    previousAction = "fold"
-            else:
-                print("3: Check")
-                print("4: Fold")
-
-                while choice not in [1, 2, 3, 4]:
-                    try:
-                        choice = int(input("Enter Choice: "))
-                    except:
-                        print("Please enter a correct option")
-
-                if choice == 3:
-                    print("You have checked")
-                    previousAction = "check"
-
-                elif choice == 4:
-                    print("You have folded")
-                    previousAction = "fold"
-            
+            while choice not in [1, 2, 3]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
 
             if choice == 1:
                 print(f"What would you like to raise the current bet to (must be at least the current bet + the previous raise: {minRaise})")
@@ -848,6 +837,10 @@ def startPoker():
                 players[0].increaseChips(-currentBet)
                 players[0].increaseBetsPlaced(1)
 
+            elif choice == 3:
+                print("You have folded")
+                previousAction = "fold"
+            
         
         else:
             if players[(dealerIndex+3+i) % len(players)].getHasFolded() == False:
@@ -863,6 +856,7 @@ def startPoker():
                 currentBet = amount
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
                 betPlaced = True
+                resetIndex = True
 
 
             elif action == "raise":
@@ -883,9 +877,22 @@ def startPoker():
             elif action == "fold":
                 players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
                 print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
+                previousAction = "fold"
 
-            ###### add check
+            elif action == "check":
+                previousAction = "check"
+                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has checked")
 
+        if resetIndex:
+            lastBetter = (dealerIndex+3+i) % len(players) #####has issues
+            resetIndex = False
+
+        i += 1
+
+        if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
+            bettingActive = False
+
+        wait(1.5)
             
 
 

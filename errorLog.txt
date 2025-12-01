@@ -1,0 +1,133 @@
+Flop:
+The flop cards are:
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│5        │ │Q        │ │4        │
+│         │ │         │ │         │
+│    ♥    │ │    ♣    │ │    ♣    │
+│         │ │         │ │         │
+│        5│ │        Q│ │        4│
+└─────────┘ └─────────┘ └─────────┘
+Current bet is $0, and minimum raise is $0
+It is your turn to choose, what would you like to do:
+1: Bet
+2: Check
+3: Fold
+Enter Choice: 2
+You have checked
+Bob has checked
+Alice has folded
+Current bet is $0, and minimum raise is $0
+It is your turn to choose, what would you like to do:
+1: Bet
+2: Check
+3: Fold
+Enter Choice: 2
+You have checked
+Bob has folded
+Current bet is $0, and minimum raise is $0
+It is your turn to choose, what would you like to do:
+1: Bet
+2: Check
+3: Fold
+Enter Choice: 2
+You have checked
+Current bet is $0, and minimum raise is $0
+It is your turn to choose, what would you like to do:
+1: Bet
+2: Check
+3: Fold
+Enter Choice: 1
+Enter bet amount: 12
+You bet $12
+^CTraceback (most recent call last):
+  File "/home/devilmuffin/Documents/Poker-AH-Computing-Project/main.py", line 1018, in <module>
+    startProgram()
+    ~~~~~~~~~~~~^^
+  File "/home/devilmuffin/Documents/Poker-AH-Computing-Project/main.py", line 1008, in startProgram
+    playGame()
+    ~~~~~~~~^^
+  File "/home/devilmuffin/Documents/Poker-AH-Computing-Project/main.py", line 912, in playGame
+    startPoker()
+    ~~~~~~~~~~^^
+  File "/home/devilmuffin/Documents/Poker-AH-Computing-Project/main.py", line 890, in startPoker
+    wait(1.5)
+    ~~~~^^^^^
+  File "/home/devilmuffin/Documents/Poker-AH-Computing-Project/main.py", line 13, in wait
+    time.sleep(amount)
+    ~~~~~~~~~~^^^^^^^^
+KeyboardInterrupt
+
+➜  Poker-AH-Computing-Project git:(main) ✗ python3 main.py
+Welcome to terminal poker
+Please select what you would like to do
+1: Play
+2: View Player Stats
+3: Exit
+Enter Choice: 1
+In this game there will be 6 players including yourself
+Would you like to continue where you left off?
+1: Yes
+2: No
+Enter Choice: 1
+Continuing last game
+We will now begin the game
+The dealer is James
+Setup:
+The player to the left of the dealer (Jacob) will place the small blind
+Jacob has placed a Small Blind of 2$
+The player 2 the left of the dealer (Scott) will place the big blind
+Scott has placed a Big Blind of 4$
+Pre Flop:
+Your hole cards are: 
+┌─────────┐ ┌─────────┐
+│7        │ │2        │
+│         │ │         │
+│    ♦    │ │    ♣    │
+│         │ │         │
+│        7│ │        2│
+└─────────┘ └─────────┘
+The players starting to the left of the Big Blind will now chose what to do
+Current bet is $4, and minimum raise is $8
+It is your turn to choose, what would you like to do:
+1: Raise
+2: Call
+3: Fold
+Enter Choice: 2
+You called on $4
+Bob, called on $4
+3Alice has folded
+James, called on $4
+Jacob, called on $4
+Scott, called on $4
+32131Flop:
+The flop cards are:
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│3        │ │4        │ │6        │
+│         │ │         │ │         │
+│    ♣    │ │    ♠    │ │    ♠    │
+│         │ │         │ │         │
+│        3│ │        4│ │        6│
+└─────────┘ └─────────┘ └─────────┘
+Current bet is $0, and minimum raise is $0
+It is your turn to choose, what would you like to do:
+1: Bet
+2: Check
+3: Fold
+Enter Choice: 2
+Enter Choice: 2
+You have checked
+Bob has folded
+James has checked
+Jacob has checked
+Scott, bet 2
+Current bet is $2, and minimum raise is $4
+It is your turn to choose, what would you like to do:
+1: Raise
+2: Call
+3: Fold
+Enter Choice: 1    
+What would you like to raise the current bet to (must be at least the current bet + the previous raise: 4)
+Enter raise: 123
+You raised to $123
+James, raised to $247
+Jacob has folded

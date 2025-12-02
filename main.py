@@ -271,6 +271,18 @@ def dealFlop():
     return cards
 
 
+def dealTurn(flop):
+    card, cardSuit, cardType = generateCard()
+    print(card)
+
+    card4 = [cardSuit, cardType]
+
+    cards = flop.append(card4)
+
+    return cards
+
+
+
 #Deletes dbFile which then allows gamePlayed to be false again
 def deleteData():
     os.remove(dbFile)
@@ -578,6 +590,186 @@ def evaluate(hand, tableCards):
         return bestScore
 
 
+def postBlinds(stage, dealerIndex, playerHands):
+    print(f"{stage}:")
+    
+    wait(1.5)
+
+    print(f"The {stage} cards are:")
+
+    if stage == "Flop":
+        tableCards = dealFlop()
+
+    elif stage == "Turn":
+        tableCards = None
+
+    elif stage == "River":
+        tableCards = None
+
+
+    wait(1.5)
+
+    betPlaced = False
+    bettingActive = True
+    resetIndex = False
+    lastBetter = None
+    previousRaise = 0
+    currentBet = 0
+
+    i = 0
+    checkedThisRound = 0
+
+    while bettingActive:
+        minRaise = previousRaise+currentBet
+
+        if players[(dealerIndex+3+i) % len(players)] == players[0] and not betPlaced and not players[0].getHasFolded():
+            print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
+            print("It is your turn to choose, what would you like to do:")
+            print("1: Bet")
+            print("2: Check")
+            print("3: Fold")
+            choice = 0
+            while choice not in [1, 2, 3]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
+
+            if choice == 1:
+                while True:
+                    try:
+                        amount = int(input("Enter bet amount: "))
+                        if amount > 0:
+                            previousRaise = amount
+                            currentBet = amount
+                            print(f"You bet ${amount}")
+                            players[0].increaseChips(-amount)
+                            betPlaced = True
+                            resetIndex = True
+                            players[0].increaseBetsPlaced(1)
+                            break
+                        else:
+                            print(f"Please enter an amount thats greater than 0")
+                    except ValueError:
+                        print(f"Please enter an amount thats greater than 0")
+            
+
+            elif choice == 2:
+                print("You have checked")
+                previousAction = "check"
+                checkedThisRound += 1
+
+            else:
+                print("You have folded")
+                previousAction = "fold"
+
+            
+
+
+        elif players[(dealerIndex+3+i) % len(players)] == players[0] and not players[0].getHasFolded():
+            choice = 0
+            print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
+            print("It is your turn to choose, what would you like to do:")
+            print("1: Raise")
+            print("2: Call")
+            print("3: Fold")
+
+            while choice not in [1, 2, 3]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
+
+            if choice == 1:
+                print(f"What would you like to raise the current bet to (must be at least the current bet + the previous raise: {minRaise})")
+
+                while True:
+                    try:
+                        amount = int(input("Enter raise: "))
+                        if amount >= minRaise:
+                            previousRaise = amount - currentBet
+                            currentBet = amount
+                            print(f"You raised to ${amount}")
+                            players[0].increaseChips(-amount)
+                            players[0].increaseBetsPlaced(1)
+                            break
+                        else:
+                            print(f"Please enter an amount thats greater than or equal to {minRaise}")
+                    except ValueError:
+                        print(f"Please enter an amount thats greater than or equal to {minRaise}")
+
+            elif choice == 2:
+                print(f'You called on ${currentBet}')
+                players[0].increaseChips(-currentBet)
+                players[0].increaseBetsPlaced(1)
+
+            elif choice == 3:
+                print("You have folded")
+                previousAction = "fold"
+            
+        
+        else:
+            if players[(dealerIndex+3+i) % len(players)].getHasFolded() == False:
+                action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], tableCards), betPlaced)
+            else:
+                action = "out"
+
+            if action == "bet":
+                amount = random.randint(1, 10)
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, bet {amount}')
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                previousRaise = amount
+                currentBet = amount
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+                betPlaced = True
+                resetIndex = True
+
+
+            elif action == "raise":
+                amount = random.randint(minRaise, minRaise+10)
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                previousRaise = amount-currentBet
+                currentBet = amount
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+
+
+            elif action == "call":
+                players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
+                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+
+
+            elif action == "fold":
+                players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
+                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
+                previousAction = "fold"
+
+            elif action == "check":
+                previousAction = "check"
+                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has checked")
+                checkedThisRound += 1
+
+        if resetIndex:
+            lastBetter = (dealerIndex+3+i) % len(players) #####has issues
+            resetIndex = False
+
+        i += 1
+
+        activePlayers = [p for p in players if not p.getHasFolded()]
+
+        if checkedThisRound == len(activePlayers):
+            bettingActive = False
+
+
+        if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
+            bettingActive = False
+
+        wait(1.5)
+
+    return tableCards
+
+
 #Starting the poker round
 def startPoker():
     print("We will now begin the game")
@@ -735,166 +927,13 @@ def startPoker():
 
         wait(1.5)
 
+    tableCards = postBlinds("Flop", dealerIndex, playerHands)
 
-    print("Flop:")
-    
-    wait(1.5)
+    print("Turn: ")
+    print("The turn card is: ")
+    dealTurn(tableCards)
 
-    print("The flop cards are:")
-    flopCards = dealFlop()
-
-    wait(1.5)
-
-    betPlaced = False
-    bettingActive = True
-    resetIndex = False
-    lastBetter = None
-    previousRaise = 0
-    currentBet = 0
-
-    i = 0
-
-    while bettingActive:
-        minRaise = previousRaise+currentBet
-
-        if players[(dealerIndex+3+i) % len(players)] == players[0] and not betPlaced and not players[0].getHasFolded():
-            print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
-            print("It is your turn to choose, what would you like to do:")
-            print("1: Bet")
-            print("2: Check")
-            print("3: Fold")
-            choice = 0
-            while choice not in [1, 2, 3]:
-                try:
-                    choice = int(input("Enter Choice: "))
-                except:
-                    print("Please enter a correct option")
-
-            if choice == 1:
-                while True:
-                    try:
-                        amount = int(input("Enter bet amount: "))
-                        if amount > 0:
-                            previousRaise = amount
-                            currentBet = amount
-                            print(f"You bet ${amount}")
-                            players[0].increaseChips(-amount)
-                            betPlaced = True
-                            resetIndex = True
-                            players[0].increaseBetsPlaced(1)
-                            break
-                        else:
-                            print(f"Please enter an amount thats greater than 0")
-                    except ValueError:
-                        print(f"Please enter an amount thats greater than 0")
-            
-
-            elif choice == 2:
-                print("You have checked")
-                previousAction = "check"
-
-            else:
-                print("You have folded")
-                previousAction = "fold"
-
-            
-
-
-        elif players[(dealerIndex+3+i) % len(players)] == players[0] and not players[0].getHasFolded():
-            choice = 0
-            print(f"Current bet is ${currentBet}, and minimum raise is ${minRaise}")
-            print("It is your turn to choose, what would you like to do:")
-            print("1: Raise")
-            print("2: Call")
-            print("3: Fold")
-
-            while choice not in [1, 2, 3]:
-                try:
-                    choice = int(input("Enter Choice: "))
-                except:
-                    print("Please enter a correct option")
-
-            if choice == 1:
-                print(f"What would you like to raise the current bet to (must be at least the current bet + the previous raise: {minRaise})")
-
-                while True:
-                    try:
-                        amount = int(input("Enter raise: "))
-                        if amount >= minRaise:
-                            previousRaise = amount - currentBet
-                            currentBet = amount
-                            print(f"You raised to ${amount}")
-                            players[0].increaseChips(-amount)
-                            players[0].increaseBetsPlaced(1)
-                            break
-                        else:
-                            print(f"Please enter an amount thats greater than or equal to {minRaise}")
-                    except ValueError:
-                        print(f"Please enter an amount thats greater than or equal to {minRaise}")
-
-            elif choice == 2:
-                print(f'You called on ${currentBet}')
-                players[0].increaseChips(-currentBet)
-                players[0].increaseBetsPlaced(1)
-
-            elif choice == 3:
-                print("You have folded")
-                previousAction = "fold"
-            
-        
-        else:
-            if players[(dealerIndex+3+i) % len(players)].getHasFolded() == False:
-                action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], flopCards), betPlaced)
-            else:
-                action = "out"
-
-            if action == "bet":
-                amount = random.randint(1, 10)
-                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, bet {amount}')
-                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
-                previousRaise = amount
-                currentBet = amount
-                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
-                betPlaced = True
-                resetIndex = True
-
-
-            elif action == "raise":
-                amount = random.randint(minRaise, minRaise+10)
-                players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
-                previousRaise = amount-currentBet
-                currentBet = amount
-                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
-                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
-
-
-            elif action == "call":
-                players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
-                print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
-                players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
-
-
-            elif action == "fold":
-                players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
-                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
-                previousAction = "fold"
-
-            elif action == "check":
-                previousAction = "check"
-                print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has checked")
-
-        if resetIndex:
-            lastBetter = (dealerIndex+3+i) % len(players) #####has issues
-            resetIndex = False
-
-        i += 1
-
-        if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
-            bettingActive = False
-
-        wait(1.5)
-            
-
+    print(tableCards)
 
 
 #Play Game

@@ -271,13 +271,13 @@ def dealFlop():
     return cards
 
 
-def dealTurn(flop):
+def dealNextRound(cards):
     card, cardSuit, cardType = generateCard()
     print(card)
 
-    card4 = [cardSuit, cardType]
+    card = [cardSuit, cardType]
 
-    cards = flop.append(card4)
+    cards.append(card)
 
     return cards
 
@@ -484,7 +484,7 @@ def determine5HandStrength(cards):
     #Full House
     if counts[0] == 3 and counts[1] >= 2:
         tripsRank = max(rank for rank, c in rankCounts.items() if c == 3)
-        pairRank = max(rank for rank, c in rankCounts.items() if c >= 2 and rank != trips_rank)
+        pairRank = max(rank for rank, c in rankCounts.items() if c >= 2 and rank != tripsRank)
         return 700000 + tripsRank * 20 + pairRank + random.randint(-2000, 2000)
 
     #Flush
@@ -590,7 +590,8 @@ def evaluate(hand, tableCards):
         return bestScore
 
 
-def postBlinds(stage, dealerIndex, playerHands):
+def postBlinds(stage, dealerIndex, playerHands, tableCards):
+
     print(f"{stage}:")
     
     wait(1.5)
@@ -601,10 +602,12 @@ def postBlinds(stage, dealerIndex, playerHands):
         tableCards = dealFlop()
 
     elif stage == "Turn":
-        tableCards = None
+        tableCards = dealNextRound(tableCards)
+        print(tableCards)
 
     elif stage == "River":
-        tableCards = None
+        tableCards = dealNextRound(tableCards)
+        print(tableCards)
 
 
     wait(1.5)
@@ -927,13 +930,11 @@ def startPoker():
 
         wait(1.5)
 
-    tableCards = postBlinds("Flop", dealerIndex, playerHands)
+    tableCards = postBlinds("Flop", dealerIndex, playerHands, "")
 
-    print("Turn: ")
-    print("The turn card is: ")
-    dealTurn(tableCards)
+    tableCards = postBlinds("Turn", dealerIndex, playerHands, tableCards)
 
-    print(tableCards)
+    tableCards = postBlinds("River", dealerIndex, playerHands, tableCards)
 
 
 #Play Game

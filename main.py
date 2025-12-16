@@ -154,16 +154,6 @@ class Player:
 
 players = [Player("placeholder", 1000, 0, 0, 0, 0, False) for i in range(6)]
 
-#Setting card values
-cardValues = {i: str(i) for i in range(2, 11)}
-cardValues.update({
-    1: "Ace (Low)",
-    11: "Jack",
-    12: "Queen",
-    13: "King",
-    14: "Ace (High)"
-})
-
 
 #Creating suit dicts
 cardsHearts = {i: True for i in range(2, 15)}
@@ -282,7 +272,6 @@ def dealNextRound(cards):
     return cards
 
 
-
 #Deletes dbFile which then allows gamePlayed to be false again
 def deleteData():
     os.remove(dbFile)
@@ -313,11 +302,6 @@ def loadData():
         print("Error while connecting to sqlite", error)
 
     finally:
-            
-
-
-
-#Play Game
         if sqliteConnection:
             sqliteConnection.close()
 
@@ -423,7 +407,9 @@ def preFlopBotAlg(score):
 
 
 #Check how strong your 5 card hand is
-def determine5HandStrength(cards):
+def determine5HandStrength(cards, noisy=False):
+    noise = random.randint(-2000, 2000) if noisy else 0
+
     ranks = [r for s,r in cards]
     suits = [s for s,r in cards]
 
@@ -471,51 +457,51 @@ def determine5HandStrength(cards):
             if all(window[j]-window[j-1] == 1 for j in range(1, 5)):
                 high = window[-1]
                 if high == 14:  #Royal Flush
-                    return 1000000 + random.randint(-2000, 2000)
+                    return 1000000 + noise
                 else:
-                    return 900000 + high * 10 + random.randint(-2000, 2000)
+                    return 900000 + high * 10 + noise
 
     #Four of a kind
     if counts[0] == 4:
         quadRank = max(rank for rank, c in rankCounts.items() if c == 4)
         kicker = max(rank for rank, c in rankCounts.items() if c != 4)
-        return 800000 + quadRank * 20 + kicker + random.randint(-2000, 2000)
+        return 800000 + quadRank * 20 + kicker + noise
 
     #Full House
     if counts[0] == 3 and counts[1] >= 2:
         tripsRank = max(rank for rank, c in rankCounts.items() if c == 3)
         pairRank = max(rank for rank, c in rankCounts.items() if c >= 2 and rank != tripsRank)
-        return 700000 + tripsRank * 20 + pairRank + random.randint(-2000, 2000)
+        return 700000 + tripsRank * 20 + pairRank + noise
 
     #Flush
     if flush:
         sortedFlush = sorted([r for s, r in cards if s == flush], reverse=True)
-        return 600000 + sum(sortedFlush[i] * (15 ** (4 - i)) for i in range(5)) + random.randint(-2000, 2000)
+        return 600000 + sum(sortedFlush[i] * (15 ** (4 - i)) for i in range(5)) + noise
 
     #Straight
     if straightHigh:
-        return 500000 + straightHigh * 10 + random.randint(-2000, 2000)
+        return 500000 + straightHigh * 10 + noise
 
     #Three of a Kind
     if counts[0] == 3:
         tripsRank = max(rank for rank, c in rankCounts.items() if c == 3)
         kickers = sorted((r for r in ranks if r != tripsRank), reverse=True)
-        return 400000 + tripsRank * 20 + kickers[0] * 2 + kickers[1] + random.randint(-2000, 2000)
+        return 400000 + tripsRank * 20 + kickers[0] * 2 + kickers[1] + noise
 
     #Two Pair
     if counts[0] == 2 and counts[1] == 2:
         pairs = sorted([rank for rank, c in rankCounts.items() if c == 2], reverse=True)
         kicker = max(rank for rank, c in rankCounts.items() if c == 1)
-        return 300000 + pairs[0] * 30 + pairs[1] * 5 + kicker + random.randint(-2000, 2000)
+        return 300000 + pairs[0] * 30 + pairs[1] * 5 + kicker + noise
 
     #One Pair
     if counts[0] == 2:
         pairRank = max(rank for rank, c in rankCounts.items() if c == 2)
         kickers = sorted((r for r in ranks if r != pairRank), reverse=True)
-        return 200000 + pairRank * 40 + kickers[0] * 4 + kickers[1] * 3 + kickers[2] + random.randint(-2000, 2000)
+        return 200000 + pairRank * 40 + kickers[0] * 4 + kickers[1] * 3 + kickers[2] + noise
 
     #High Card
-    return 100000 + ranksSorted[0]*20 + ranksSorted[1]*5 + random.randint(-2000, 2000)
+    return 100000 + ranksSorted[0]*20 + ranksSorted[1]*5 + noise
 
 
 def postBlindActions(score, hasBet):
@@ -575,7 +561,7 @@ def postBlindActions(score, hasBet):
 
 
 #Evaluates score for flop, turn and river
-def evaluate(hand, tableCards):
+def evaluate(hand, tableCards, noisy=False):
     cards = list(hand) + list(tableCards)
 
     if len(cards) <=5:
@@ -590,7 +576,7 @@ def evaluate(hand, tableCards):
         return bestScore
 
 
-def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
+def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
     gameComplete = False
 
     print(f"{stage}:")
@@ -651,6 +637,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
                             betPlaced = True
                             resetIndex = True
                             players[0].increaseBetsPlaced(1)
+                            pot += amount
                             break
                         else:
                             print(f"Please enter an amount thats greater than 0")
@@ -697,6 +684,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
                             print(f"You raised to ${amount}")
                             players[0].increaseChips(-amount)
                             players[0].increaseBetsPlaced(1)
+                            pot += amount
                             break
                         else:
                             print(f"Please enter an amount thats greater than or equal to {minRaise}")
@@ -707,6 +695,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
                 print(f'You called on ${currentBet}')
                 players[0].increaseChips(-currentBet)
                 players[0].increaseBetsPlaced(1)
+                pot += currentBet
 
             elif choice == 3:
                 print("You have folded")
@@ -716,7 +705,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
         
         else:
             if players[(dealerIndex+3+i) % len(players)].getHasFolded() == False:
-                action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], tableCards), betPlaced)
+                action = postBlindActions(evaluate(playerHands[(dealerIndex+3+i) % len(players)], tableCards, noisy=True), betPlaced)
             else:
                 action = "out"
 
@@ -729,6 +718,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
                 betPlaced = True
                 resetIndex = True
+                pot += amount
 
 
             elif action == "raise":
@@ -738,12 +728,14 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
                 currentBet = amount
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+                pot += amount
 
 
             elif action == "call":
                 players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
+                pot += currentBet
 
 
             elif action == "fold":
@@ -780,12 +772,13 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded):
         if numFolded == 5:
             gameComplete = True
 
-    return tableCards, gameComplete
+    return tableCards, gameComplete, pot
 
 
 #Starting the poker round
 def startPoker():
     gameComplete = False
+    pot = 0
 
     print("We will now begin the game")
 
@@ -817,6 +810,7 @@ def startPoker():
     else:
         sb = random.randint(1, 5)
     print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
+    pot += sb
 
 
     wait(1.5)
@@ -835,6 +829,7 @@ def startPoker():
     else:
         bb = sb*2
     print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
+    pot += bb
 
     
     wait(1.5)
@@ -887,10 +882,15 @@ def startPoker():
 
                                 if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
                                     players[0].increaseChips(-(amount-sb))
+                                    pot += amount-sb
+
                                 elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+2) % len(players)]:
                                     players[0].increaseChips(-(amount-bb))
+                                    pot += amount-bb
+
                                 else:
                                     players[0].increaseChips(-amount)
+                                    pot += amount
 
                                 players[0].increaseBetsPlaced(1)
                                 break
@@ -901,8 +901,20 @@ def startPoker():
 
                 elif choice == 2:
                     print(f'You called on ${currentBet}')
-                    players[0].increaseChips(-currentBet)
-                    players[0].increaseBetsPlaced(1)
+                
+                    if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                        players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-sb))
+                        pot += currentBet-sb
+
+                    elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
+                        players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-bb))
+                        pot += currentBet-bb
+
+                    else:
+                        players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                        pot += currentBet
+
+                    players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
 
                 elif choice == 3:
                     print("You have folded")
@@ -919,10 +931,13 @@ def startPoker():
 
                     if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-(amount-sb))
+                        pot += amount-sb
                     elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+2) % len(players)]:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-(amount-bb))
+                        pot += amount-bb
                     else:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
+                        pot += amount
 
                     previousRaise = amount-currentBet
                     currentBet = amount
@@ -933,10 +948,16 @@ def startPoker():
                 elif action == "call":
                     if players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-sb))
+                        pot += currentBet-sb
+
                     elif players[(dealerIndex+3+i) % len(players)] == players[(dealerIndex+1) % len(players)]:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-(currentBet-bb))
+                        pot += currentBet-bb
+
                     else:
                         players[(dealerIndex+3+i) % len(players)].increaseChips(-currentBet)
+                        pot += currentBet
+
                     print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, called on ${currentBet}')
                     players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
 
@@ -951,40 +972,69 @@ def startPoker():
     else:
         for i in range(6):
             if players[i].getHasFolded() == False:
-                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {currentBet}")
-                players[i].increaseChips(currentBet)
+                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                players[i].increaseChips(pot)
                 gameComplete = True
 
     if not gameComplete:
 
-        tableCards, gameComplete = postBlinds("Flop", dealerIndex, playerHands, "", numFolded)
+        tableCards, gameComplete, pot = postBlinds("Flop", dealerIndex, playerHands, "", numFolded, pot)
     
     else:
-
-        print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {currentBet}") # change current bet to pot as bet gets reset everytime
-        players[i].increaseChips(currentBet)
+        for i in range(6):
+            if players[i].getHasFolded() == False:
+                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                players[i].increaseChips(pot)
 
     if not gameComplete:
 
-        tableCards, gameComplete = postBlinds("Turn", dealerIndex, playerHands, tableCards, numFolded)
+        tableCards, gameComplete, pot = postBlinds("Turn", dealerIndex, playerHands, tableCards, numFolded, pot)
 
     else:
 
-        print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {currentBet}")
-        players[i].increaseChips(currentBet)
+        for i in range(6):
+            if players[i].getHasFolded() == False:
+                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                players[i].increaseChips(pot)
 
     if not gameComplete:
 
-        tableCards, gameComplete = postBlinds("River", dealerIndex, playerHands, tableCards, numFolded)
+        tableCards, gameComplete, pot = postBlinds("River", dealerIndex, playerHands, tableCards, numFolded, pot)
 
     else:
 
-        print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {currentBet}")
-        players[i].increaseChips(currentBet)
+        for i in range(6):
+            if players[i].getHasFolded() == False:
+                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                players[i].increaseChips(pot)
 
     if not gameComplete:
-        pass
+        nonFoldedIndex = []
 
+        for i in range(6):
+            if players[i].getHasFolded() == False:
+                players.setCurrentHandScore(evaluate(playerHands[i]))
+                nonFoldedIndex.append(i)
+
+        highestScore = 0
+        winningIndex = 0
+
+        for i in range(6):
+            if players[(dealerIndex+i+1) % len(players)] in nonFoldedIndex:
+                if players[(dealerIndex+i+1) % len(players)].getCurrentHandScore() > highestScore:
+                    highestScore = players[(dealerIndex+i+1) % len(players)].getCurrentHandScore()
+                    winningIndex = (dealerIndex+i+1) % len(players)
+
+                    #add winning feature type shi
+
+
+
+    else:
+
+        for i in range(6):
+            if players[i].getHasFolded() == False:
+                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                players[i].increaseChips(pot)
 
 #Play Game
 def playGame():

@@ -51,7 +51,7 @@ def firstPlay():
 
         query = """CREATE TABLE IF NOT EXISTS player (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name VARCHAR NOT NULL,
+            name VARCHAR(20) NOT NULL,
             chipValue INTEGER NOT NULL,
             wins INTEGER NOT NULL,
             losses INTEGER NOT NULL,
@@ -83,7 +83,7 @@ def firstPlay():
     startPoker()
 
 
-#Create class for player (Update later)
+#Create class for player
 class Player:
     def __init__(self, name ,chipValue, wins, losses, betsPlaced, currentHandScore, hasFolded):
         self.__name = name
@@ -126,9 +126,6 @@ class Player:
 
     def increaseBetsPlaced(self, amount):
         self.__betsPlaces += amount
-
-    def increaseCurrentHandScore(self, amount):
-        self.__currentHandScore += amount
 
     def setName(self, nameValue):
         self.__name = nameValue

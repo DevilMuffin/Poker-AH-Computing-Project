@@ -747,7 +747,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
                 checkedThisRound += 1
 
         if resetIndex:
-            lastBetter = (dealerIndex+3+i) % len(players) #####has issues
+            lastBetter = (dealerIndex+3+i) % len(players)
             resetIndex = False
 
         i += 1

@@ -587,11 +587,9 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
 
     elif stage == "Turn":
         tableCards = dealNextRound(tableCards)
-        print(tableCards)
 
     elif stage == "River":
         tableCards = dealNextRound(tableCards)
-        print(tableCards)
 
 
     wait(1.5)
@@ -973,6 +971,8 @@ def startPoker():
                 players[i].increaseChips(pot)
                 gameComplete = True
 
+    gameEnd = False
+
     if not gameComplete:
 
         tableCards, gameComplete, pot = postBlinds("Flop", dealerIndex, playerHands, "", numFolded, pot)
@@ -982,56 +982,97 @@ def startPoker():
             if players[i].getHasFolded() == False:
                 print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
                 players[i].increaseChips(pot)
+                gameEnd = True
+                wait(0.5)
+                break
+    
+    if not gameEnd:
 
-    if not gameComplete:
+        if not gameComplete:
 
-        tableCards, gameComplete, pot = postBlinds("Turn", dealerIndex, playerHands, tableCards, numFolded, pot)
+            tableCards, gameComplete, pot = postBlinds("Turn", dealerIndex, playerHands, tableCards, numFolded, pot)
 
-    else:
+        else:
 
-        for i in range(6):
-            if players[i].getHasFolded() == False:
-                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
-                players[i].increaseChips(pot)
+            for i in range(6):
+                if players[i].getHasFolded() == False:
+                    print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                    players[i].increaseChips(pot)
+                    gameEnd = True
+                    wait(0.5)
+                    break
+    if not gameEnd:
 
-    if not gameComplete:
+        if not gameComplete:
 
-        tableCards, gameComplete, pot = postBlinds("River", dealerIndex, playerHands, tableCards, numFolded, pot)
+            tableCards, gameComplete, pot = postBlinds("River", dealerIndex, playerHands, tableCards, numFolded, pot)
 
-    else:
+        else:
 
-        for i in range(6):
-            if players[i].getHasFolded() == False:
-                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
-                players[i].increaseChips(pot)
+            for i in range(6):
+                if players[i].getHasFolded() == False:
+                    print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                    players[i].increaseChips(pot)
+                    gameEnd = True
+                    wait(0.5)
+                    break
+    
+    if not gameEnd:
 
-    if not gameComplete:
-        nonFoldedIndex = []
+        if not gameComplete:
+            nonFoldedIndex = []
 
-        for i in range(6):
-            if players[i].getHasFolded() == False:
-                players.setCurrentHandScore(evaluate(playerHands[i]))
-                nonFoldedIndex.append(i)
+            for i in range(6):
+                if players[i].getHasFolded() == False:
+                    players[i].setCurrentHandScore(evaluate(playerHands[i]), tableCards)
+                    nonFoldedIndex.append(i)
 
-        highestScore = 0
-        winningIndex = 0
+            highestScore = 0
+            winningIndex = 0
 
-        for i in range(6):
-            if players[(dealerIndex+i+1) % len(players)] in nonFoldedIndex:
-                if players[(dealerIndex+i+1) % len(players)].getCurrentHandScore() > highestScore:
-                    highestScore = players[(dealerIndex+i+1) % len(players)].getCurrentHandScore()
-                    winningIndex = (dealerIndex+i+1) % len(players)
+            for i in range(6):
+                if players[(dealerIndex+i+1) % len(players)] in nonFoldedIndex:
+                    if players[(dealerIndex+i+1) % len(players)].getCurrentHandScore() > highestScore:
+                        highestScore = players[(dealerIndex+i+1) % len(players)].getCurrentHandScore()
+                        winningIndex = (dealerIndex+i+1) % len(players)
 
-                    #add winning feature type shi
+            wait(1)
+
+            print("Showdown:")
+
+            wait(0.5)
+
+            print(f"The player with the winning hand was {players[winningIndex].getName()}")
+            wait(0.5)
+            if winningIndex == 0:
+                print(f"Well done, you have won a pot of {pot}")
+                players[0].increaseChips(pot)
+            else:
+                print(f"{players[winningIndex].getName()} has won a pot of {pot}")
+                players[winningIndex].increaseChips(pot)
+
+            wait(0.5)
 
 
+        else:
 
-    else:
+            for i in range(6):
+                if players[i].getHasFolded() == False:
+                    print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
+                    players[i].increaseChips(pot)
+                    wait(0.5)
+                    break
 
-        for i in range(6):
-            if players[i].getHasFolded() == False:
-                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
-                players[i].increaseChips(pot)
+    print("That concludes this round of poker")
+
+    wait(1)
+
+    
+    for player in players:
+        updateData(player)
+
+    startProgram()
+
 
 #Play Game
 def playGame():
@@ -1104,6 +1145,10 @@ def leaderboardSort(stat):
         player = array[i][0]
         value = array[i][1]
         print(str(1+i) + ":", player.getName(), "-", str(value))
+
+    wait(1)
+
+    startProgram()
                 
 
 #Display sorted leaderboard of player stats

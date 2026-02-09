@@ -319,6 +319,8 @@ def updateData(player):
 
         cursor.execute(insertQuery, (chipValue, wins, losses, betsPlaced, name))
 
+        sqliteConnection.commit()
+
 
     except sqlite3.Error as error:
         print("Error while connecting to sqlite", error)
@@ -573,12 +575,12 @@ def evaluate(hand, tableCards, noisy=False):
         return bestScore
 
 
-def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
+def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
     gameComplete = False
 
     print(f"{stage}:")
     
-    wait(1.5)
+    wait(1)
 
     print(f"The {stage} cards are:")
 
@@ -592,7 +594,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
         tableCards = dealNextRound(tableCards)
 
 
-    wait(1.5)
+    wait(1)
 
     betPlaced = False
     bettingActive = True
@@ -605,6 +607,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
     checkedThisRound = 0
 
     while bettingActive:
+        print("tests")
         minRaise = previousRaise+currentBet
 
         if players[(dealerIndex+3+i) % len(players)] == players[0] and not betPlaced and not players[0].getHasFolded():
@@ -642,13 +645,11 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
 
             elif choice == 2:
                 print("You have checked")
-                previousAction = "check"
                 checkedThisRound += 1
 
             else:
                 print("You have folded")
-                previousAction = "fold"
-                numFolded += 1
+                players[0].setHasFolded(True)
 
             
 
@@ -694,8 +695,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
 
             elif choice == 3:
                 print("You have folded")
-                previousAction = "fold"
-                numFolded += 1
+                players[0].setHasFolded(True)
             
         
         else:
@@ -732,15 +732,11 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
                 pot += currentBet
 
-
             elif action == "fold":
                 players[(dealerIndex+3+i) % len(players)].setHasFolded(True)
                 print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has folded")
-                previousAction = "fold"
-                numFolded += 1
 
             elif action == "check":
-                previousAction = "check"
                 print(f"{players[(dealerIndex+3+i) % len(players)].getName()} has checked")
                 checkedThisRound += 1
 
@@ -752,6 +748,8 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
 
         activePlayers = [p for p in players if not p.getHasFolded()]
 
+        print(len(activePlayers))
+
         if checkedThisRound == len(activePlayers):
             bettingActive = False
 
@@ -759,19 +757,22 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, numFolded, pot):
         if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
             bettingActive = False
 
-        if numFolded == 5:
+
+        if len(activePlayers) == 1:
             bettingActive = False
-
-        wait(1.5)
-
-        if numFolded == 5:
             gameComplete = True
+            
+        wait(1)
+            
 
     return tableCards, gameComplete, pot
 
 
 #Starting the poker round
 def startPoker():
+    for p in players:
+        p.setHasFolded(False)
+
     gameComplete = False
     pot = 0
 
@@ -975,7 +976,7 @@ def startPoker():
 
     if not gameComplete:
 
-        tableCards, gameComplete, pot = postBlinds("Flop", dealerIndex, playerHands, "", numFolded, pot)
+        tableCards, gameComplete, pot = postBlinds("Flop", dealerIndex, playerHands, "", pot)
     
     else:
         for i in range(6):
@@ -990,7 +991,7 @@ def startPoker():
 
         if not gameComplete:
 
-            tableCards, gameComplete, pot = postBlinds("Turn", dealerIndex, playerHands, tableCards, numFolded, pot)
+            tableCards, gameComplete, pot = postBlinds("Turn", dealerIndex, playerHands, tableCards, pot)
 
         else:
 
@@ -1001,11 +1002,12 @@ def startPoker():
                     gameEnd = True
                     wait(0.5)
                     break
+
     if not gameEnd:
 
         if not gameComplete:
 
-            tableCards, gameComplete, pot = postBlinds("River", dealerIndex, playerHands, tableCards, numFolded, pot)
+            tableCards, gameComplete, pot = postBlinds("River", dealerIndex, playerHands, tableCards, pot)
 
         else:
 
@@ -1024,17 +1026,17 @@ def startPoker():
 
             for i in range(6):
                 if players[i].getHasFolded() == False:
-                    players[i].setCurrentHandScore(evaluate(playerHands[i]), tableCards)
+                    players[i].setCurrentHandScore(evaluate(playerHands[i], tableCards))
                     nonFoldedIndex.append(i)
 
             highestScore = 0
             winningIndex = 0
 
             for i in range(6):
-                if players[(dealerIndex+i+1) % len(players)] in nonFoldedIndex:
-                    if players[(dealerIndex+i+1) % len(players)].getCurrentHandScore() > highestScore:
-                        highestScore = players[(dealerIndex+i+1) % len(players)].getCurrentHandScore()
-                        winningIndex = (dealerIndex+i+1) % len(players)
+                if i == nonFoldedIndex:
+                    if players[i].getCurrentHandScore() > highestScore:
+                        highestScore = players[i].getCurrentHandScore()
+                        winningIndex = i
 
             wait(1)
 
@@ -1065,11 +1067,11 @@ def startPoker():
 
     print("That concludes this round of poker")
 
-    wait(1)
-
     
     for player in players:
         updateData(player)
+
+    wait(2)
 
     startProgram()
 
@@ -1089,7 +1091,7 @@ def playGame():
             except:
                 print("Please enter a correct option")
         if choice == 1:
-            print("Continuing last game")
+            print("Loading player data")
             loadData()
             startPoker()
         elif choice == 2:

@@ -625,11 +625,14 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
     bettingActive = True
     resetIndex = False
     lastBetter = None
+    lastRaiser = None
     previousRaise = 0
     currentBet = 0
 
     i = 0
     checkedThisRound = 0
+
+    hasRaised = False
 
     while bettingActive:
         minRaise = previousRaise+currentBet
@@ -705,6 +708,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
                             players[0].increaseChips(-amount)
                             players[0].increaseBetsPlaced(1)
                             pot += amount
+                            hasRaised = True
                             break
                         else:
                             print(f"Please enter an amount thats greater than or equal to {minRaise}")
@@ -729,7 +733,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
                 action = "out"
 
             if action == "bet":
-                amount = random.randint(1, 10)
+                amount = random.randint(1, 20)
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, bet {amount}')
                 players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
                 previousRaise = amount
@@ -741,13 +745,14 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
 
 
             elif action == "raise":
-                amount = random.randint(minRaise, minRaise+10)
+                amount = random.randint(minRaise, minRaise+20)
                 players[(dealerIndex+3+i) % len(players)].increaseChips(-amount)
                 previousRaise = amount-currentBet
                 currentBet = amount
                 print(f'{players[(dealerIndex+3+i) % len(players)].getName()}, raised to ${currentBet}')
                 players[(dealerIndex+3+i) % len(players)].increaseBetsPlaced(1)
                 pot += amount
+                hasRaised = True
 
 
             elif action == "call":
@@ -768,6 +773,10 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
             lastBetter = (dealerIndex+3+i) % len(players)
             resetIndex = False
 
+        if hasRaised:
+            lastRaiser = (dealerIndex+3+i) % len(players)
+            hasRaised = False
+
         i += 1
 
         activePlayers = [p for p in players if not p.getHasFolded()]
@@ -775,14 +784,19 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
         if checkedThisRound == len(activePlayers) and not betPlaced:
             bettingActive = False
 
+        if lastRaiser is None: # ongoing testing
+            if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
+                bettingActive = False
 
-        if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
+        if lastRaiser is not None and (dealerIndex+3+i) % len(players) == lastRaiser:
             bettingActive = False
 
 
         if len(activePlayers) == 1:
             bettingActive = False
             gameComplete = True
+
+        
             
         wait(1)
             
@@ -1145,7 +1159,7 @@ def leaderboardSort(stat):
 
     wait(1)
 
-    startProgram()
+    startProgram(gamePlayed)
                 
 
 #Display sorted leaderboard of player stats
@@ -1176,39 +1190,6 @@ def endProgram():
 
 #Starts the program off
 def startProgram(gamePlayed):
-    print("Welcome to terminal poker")
-
-    if gamePlayed:
-            print("Would you like to load your saved data?")
-            print("1: Yes")
-            print("2: No")
-            choice = 0
-            while choice not in [1, 2]:
-                try:
-                    choice = int(input("Enter Choice: "))
-                except:
-                    print("Please enter a correct option")
-            if choice == 1:
-                print("Loading player data")
-                loadData()
-            elif choice == 2:
-                print("This will reset all stats for you and the bots, are you sure?")
-                print("1: Yes")
-                print("2: No")
-                choice = int
-                while choice not in [1, 2]:
-                    try:
-                        choice = int(input("Enter Choice: "))
-                    except:
-                        print("Please enter a correct option")
-                if choice == 1:
-                    print("Deleting saved data")
-                    deleteData()
-
-                elif choice == 2:
-                    print("Loading saved data")
-                    loadData()
-
     print("Please select what you would like to do")
     print("1: Play")
     print("2: View Player Stats")
@@ -1234,4 +1215,38 @@ def startProgram(gamePlayed):
     
 
 #Running the program
+
+print("Welcome to terminal poker")
+
+if gamePlayed:
+        print("Would you like to load your saved data?")
+        print("1: Yes")
+        print("2: No")
+        choice = 0
+        while choice not in [1, 2]:
+            try:
+                choice = int(input("Enter Choice: "))
+            except:
+                print("Please enter a correct option")
+        if choice == 1:
+            print("Loading player data")
+            loadData()
+        elif choice == 2:
+            print("This will reset all stats for you and the bots, are you sure?")
+            print("1: Yes")
+            print("2: No")
+            choice = int
+            while choice not in [1, 2]:
+                try:
+                    choice = int(input("Enter Choice: "))
+                except:
+                    print("Please enter a correct option")
+            if choice == 1:
+                print("Deleting saved data")
+                deleteData()
+
+            elif choice == 2:
+                print("Loading saved data")
+                loadData()
+
 startProgram(gamePlayed)

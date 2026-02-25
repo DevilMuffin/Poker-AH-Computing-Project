@@ -3,14 +3,9 @@ import random
 import sqlite3
 import sys
 import os
-import time
+from time import sleep
 from itertools import combinations
 from collections import Counter
-
-
-#So I don't need to type time.sleep every time
-def wait(amount):
-    time.sleep(amount)
 
 dbFile = 'PokerData.db'
 gamePlayed = False
@@ -605,7 +600,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
 
     print(f"{stage}:")
     
-    wait(1)
+    sleep(1)
 
     print(f"The {stage} cards are:")
 
@@ -619,7 +614,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
         tableCards = dealNextRound(tableCards)
 
 
-    wait(1)
+    sleep(1)
 
     betPlaced = False
     bettingActive = True
@@ -798,7 +793,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
 
         
             
-        wait(1)
+        sleep(1)
             
 
     return tableCards, gameComplete, pot
@@ -815,23 +810,23 @@ def startPoker():
     hasRaised = False
     pot = 0
 
-    wait(0.5)
+    sleep(0.5)
 
     print("We will now begin the game")
 
-    wait(1.5)
+    sleep(1.5)
 
     dealer = random.choice(players)
     dealerIndex = players.index(dealer)
 
     print(f'The dealer is {dealer.getName()}')
     
-    wait(1.5)
+    sleep(1.5)
 
     print("Setup:")
     
 
-    wait(1.5)
+    sleep(1.5)
     #Small Blind
     print(f"The player to the left of the dealer ({players[(dealerIndex+1) % len(players)].getName()}) will place the small blind")
     if players[(dealerIndex+1) % len(players)] == players[0]:
@@ -850,7 +845,7 @@ def startPoker():
     pot += sb
 
 
-    wait(1.5)
+    sleep(1.5)
     #Big Blind
     print(f"The player 2 the left of the dealer ({players[(dealerIndex+2) % len(players)].getName()}) will place the big blind")
     if players[(dealerIndex+2) % len(players)] == players[0]:
@@ -869,7 +864,7 @@ def startPoker():
     pot += bb
 
     
-    wait(1.5)
+    sleep(1.5)
     #Pre Flop
     print("Pre Flop:")
     print("Your hole cards are: ")
@@ -879,7 +874,7 @@ def startPoker():
     for i in range(6):
         players[i].setCurrentHandScore(determineHandStrength(playerHands[i]))
     
-    wait(1.5)
+    sleep(1.5)
     print('The players starting to the left of the Big Blind will now chose what to do')
     
     previousRaise = bb
@@ -1025,7 +1020,7 @@ def startPoker():
         if lastRaiser is not None and (dealerIndex+3+i) % len(players) == lastRaiser:
             bettingActive = False
 
-        wait(1.5)
+        sleep(1.5)
 
     if numFolded == 5:
         for i in range(6):
@@ -1046,7 +1041,7 @@ def startPoker():
                 print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
                 players[i].increaseChips(pot)
                 gameEnd = True
-                wait(0.5)
+                sleep(0.5)
                 break
     
     if not gameEnd:
@@ -1062,7 +1057,7 @@ def startPoker():
                     print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
                     players[i].increaseChips(pot)
                     gameEnd = True
-                    wait(0.5)
+                    sleep(0.5)
                     break
 
     if not gameEnd:
@@ -1078,7 +1073,7 @@ def startPoker():
                     print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
                     players[i].increaseChips(pot)
                     gameEnd = True
-                    wait(0.5)
+                    sleep(0.5)
                     break
     
     if not gameEnd:
@@ -1100,27 +1095,30 @@ def startPoker():
                         highestScore = players[i].getCurrentHandScore()
                         winningIndex = i
 
-            wait(1)
+            sleep(1)
 
             print("Showdown:")
 
-            wait(0.5)
+            sleep(0.5)
 
             print(f"The player with the winning hand was {players[winningIndex].getName()}, with a hand of {formatHand(playerHands[winningIndex])}")
-            wait(0.5)
+            sleep(0.5)
             if winningIndex == 0:
                 print(f"Well done, you have won a pot of {pot}")
                 players[0].increaseChips(pot)
+                players[0].increaseWins(1)
             else:
                 print(f"{players[winningIndex].getName()} has won a pot of {pot}")
                 players[winningIndex].increaseChips(pot)
+                players[winningIndex].increaseWins(1)
 
             print("The rest of the players hands were as follows")
             for i in range(6):
                 if i != winningIndex:
                     print(f"{players[i].getName()} had a hand of {formatHand(playerHands[i])}")
+                    players[i].increaseLosses(1)
 
-            wait(0.5)
+            sleep(0.5)
 
 
         else:
@@ -1129,7 +1127,7 @@ def startPoker():
                 if players[i].getHasFolded() == False:
                     print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
                     players[i].increaseChips(pot)
-                    wait(0.5)
+                    sleep(0.5)
                     break
 
     print("That concludes this round of poker")
@@ -1138,7 +1136,7 @@ def startPoker():
     for player in players:
         updateData(player)
 
-    wait(2)
+    sleep(2)
 
     gamePlayed = True
 
@@ -1177,7 +1175,7 @@ def leaderboardSort(stat):
         value = array[i][1]
         print(str(1+i) + ":", player.getName(), "-", str(value))
 
-    wait(1)
+    sleep(1)
 
     startProgram(gamePlayed)
                 
@@ -1233,7 +1231,7 @@ def startProgram(gamePlayed):
             viewStats()
         else:
             print("You have not played before, there are no stats to view")
-            wait(1)
+            sleep(1)
             startProgram(gamePlayed=False)
             
     elif choice == 3:
@@ -1270,6 +1268,7 @@ if gamePlayed:
             if choice == 1:
                 print("Deleting saved data")
                 deleteData()
+                gamePlayed = False
 
             elif choice == 2:
                 print("Loading saved data")

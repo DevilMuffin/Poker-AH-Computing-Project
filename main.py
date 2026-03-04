@@ -216,6 +216,12 @@ def generateCard():
             return card, cardSuit, cardType
 
 
+def resetDeck():
+    for suit in deck:
+        for value in deck[suit]:
+            deck[suit][value] = True
+
+
 def dealPreFlop(playerName):
     card1, cardSuit1, cardType1 = generateCard()
     card2, cardSuit2, cardType2 = generateCard()
@@ -801,6 +807,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
 
 #Starting the poker round
 def startPoker():
+    resetDeck()
     print("In this game there will be 6 players including yourself")
     for p in players:
         p.setHasFolded(False)

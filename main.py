@@ -849,6 +849,7 @@ def startPoker():
     else:
         sb = random.randint(1, 5)
     print(f'{players[(dealerIndex+1) % len(players)].getName()} has placed a Small Blind of {sb}$')
+    players[(dealerIndex+2) % len(players)].increaseChips(-sb)
     pot += sb
 
 
@@ -868,6 +869,7 @@ def startPoker():
     else:
         bb = sb*2
     print(f'{players[(dealerIndex+2) % len(players)].getName()} has placed a Big Blind of {bb}$')
+    players[(dealerIndex+2) % len(players)].increaseChips(-bb)
     pot += bb
 
     

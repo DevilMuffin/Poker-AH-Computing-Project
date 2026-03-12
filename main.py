@@ -1186,7 +1186,7 @@ def leaderboardSort(stat):
 
     sleep(1)
 
-    startProgram(gamePlayed)
+    startProgram(gamePlayed=True)
                 
 
 #Display sorted leaderboard of player stats

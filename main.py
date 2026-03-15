@@ -1200,6 +1200,8 @@ def viewStats():
     while choice not in [1, 2, 3, 4]:
         try:
             choice = int(input("Enter Choice: "))
+            if choice not in [1, 2, 3, 4]:
+                print("Please enter a correct option")
         except:
             print("Please enter a correct option")
     if choice == 1:
@@ -1226,6 +1228,8 @@ def startProgram(gamePlayed):
 
         try:
             choice = int(input("Enter Choice: "))
+            if choice not in [1, 2, 3]:
+                print("Please enter a correct option")
         except:
             print("Please enter a correct option")
 
@@ -1259,6 +1263,8 @@ if gamePlayed:
         while choice not in [1, 2]:
             try:
                 choice = int(input("Enter Choice: "))
+                if choice not in [1, 2]:
+                    print("Please enter a correct option")
             except:
                 print("Please enter a correct option")
         if choice == 1:
@@ -1272,6 +1278,8 @@ if gamePlayed:
             while choice not in [1, 2]:
                 try:
                     choice = int(input("Enter Choice: "))
+                    if choice not in [1, 2]:
+                        print("Please enter a correct option")
                 except:
                     print("Please enter a correct option")
             if choice == 1:

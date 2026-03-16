@@ -7,6 +7,7 @@ from time import sleep
 from itertools import combinations
 from collections import Counter
 
+#Checking if database exists
 dbFile = 'PokerData.db'
 gamePlayed = False
 if os.path.exists(dbFile):
@@ -160,9 +161,7 @@ deck = {
     "Clubs": cardsClubs
 }
 
-#Creating hand types
-
-
+#Generating the card for printing
 def createCard(cardType, cardSuit):
     cardSymbols = {i: str(i) for i in range(2, 11)}
     cardSymbols.update({
@@ -221,7 +220,7 @@ def resetDeck():
         for value in deck[suit]:
             deck[suit][value] = True
 
-
+#Deals out the pre flop
 def dealPreFlop(playerName):
     card1, cardSuit1, cardType1 = generateCard()
     card2, cardSuit2, cardType2 = generateCard()
@@ -258,7 +257,7 @@ def dealFlop():
 
     return cards
 
-
+#Generates cards for turn and river
 def dealNextRound(cards):
     card, cardSuit, cardType = generateCard()
     print(card)
@@ -600,7 +599,7 @@ def evaluate(hand, tableCards, noisy=False):
 
         return bestScore
 
-
+#Game for post pre flop stages
 def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
     gameComplete = False
 
@@ -648,6 +647,8 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
             while choice not in [1, 2, 3]:
                 try:
                     choice = int(input("Enter Choice: "))
+                    if choice not in [1, 2, 3]:
+                        print("Please enter a correct option")
                 except:
                     print("Please enter a correct option")
 
@@ -693,6 +694,8 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
             while choice not in [1, 2, 3]:
                 try:
                     choice = int(input("Enter Choice: "))
+                    if choice not in [1, 2, 3]:
+                        print("Please enter a correct option")
                 except:
                     print("Please enter a correct option")
 
@@ -785,7 +788,7 @@ def postBlinds(stage, dealerIndex, playerHands, tableCards, pot):
         if checkedThisRound == len(activePlayers) and not betPlaced:
             bettingActive = False
 
-        if lastRaiser is None: # ongoing testing
+        if lastRaiser is None:
             if lastBetter is not None and (dealerIndex+3+i) % len(players) == lastBetter:
                 bettingActive = False
 
@@ -895,7 +898,7 @@ def startPoker():
 
     bettingActive = True
 
-
+    
     while bettingActive and numFolded < 5:
 
         minRaise = previousRaise+currentBet
@@ -910,6 +913,8 @@ def startPoker():
             while choice not in [1, 2, 3]:
                 try:
                     choice = int(input("Enter Choice: "))
+                    if choice not in [1, 2, 3]:
+                        print("Please enter a correct option")
                 except:
                     print("Please enter a correct option")
 
@@ -1036,6 +1041,7 @@ def startPoker():
 
     gameEnd = False
 
+    #Flop
     if not gameComplete:
 
         tableCards, gameComplete, pot = postBlinds("Flop", dealerIndex, playerHands, "", pot)
@@ -1049,6 +1055,7 @@ def startPoker():
                 sleep(0.5)
                 break
     
+    #Turn
     if not gameEnd:
 
         if not gameComplete:
@@ -1064,7 +1071,8 @@ def startPoker():
                     gameEnd = True
                     sleep(0.5)
                     break
-
+    
+    #River
     if not gameEnd:
 
         if not gameComplete:
@@ -1081,6 +1089,7 @@ def startPoker():
                     sleep(0.5)
                     break
     
+    #Showdown
     if not gameEnd:
 
         if not gameComplete:

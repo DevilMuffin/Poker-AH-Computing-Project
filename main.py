@@ -1032,11 +1032,7 @@ def startPoker():
         sleep(1.5)
 
     if numFolded == 5:
-        for i in range(6):
-            if players[i].getHasFolded() == False:
-                print(f"Everyone else has folded, therefore {players[i].getName()} wins a pot of {pot}")
-                players[i].increaseChips(pot)
-                gameComplete = True
+        gameComplete = True
 
     gameEnd = False
 
